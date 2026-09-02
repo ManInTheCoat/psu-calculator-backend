@@ -1,0 +1,52 @@
+{% set active = 'tile' %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Каталог компонентов — PC Power Calc</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <header class="header">
+        <a class="header__logo" href="/">PC Power Calc</a>
+    </header>
+
+    <main class="page page--tile">
+        <form class="filter" method="get" action="/">
+            <label class="filter__label" for="max_tdp">Макс. TDP, Вт</label>
+            <div class="filter__row">
+                <input class="filter__input"
+                       type="number"
+                       id="max_tdp"
+                       name="max_tdp"
+                       min="0"
+                       placeholder="например, 150"
+                       value="{{ max_tdp if max_tdp is not none else '' }}">
+                <button class="filter__button" type="submit">Найти</button>
+            </div>
+        </form>
+
+        {% if components %}
+        <ul class="tiles">
+            {% for c in components %}
+            <li class="tile">
+                <a class="tile__link" href="/component/{{ c.id }}">
+                    <img class="tile__image" src="{{ c.image_url }}" alt="{{ c.title }}">
+                    <h2 class="tile__title">{{ c.title }}</h2>
+                    <div class="tile__meta">
+                        <span class="chip">{{ c.tdp_watt }} Вт</span>
+                        <span class="likes">♥ {{ c.likes_count }}</span>
+                    </div>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="empty">По заданному ограничению мощности компоненты не найдены.</p>
+        {% endif %}
+    </main>
+
+    {% include "tabbar.html" %}
+</body>
+</html>

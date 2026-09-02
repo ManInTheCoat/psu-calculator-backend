@@ -1,0 +1,51 @@
+{% set active = 'feed' %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ c.title }} — PC Power Calc</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <header class="header">
+        <a class="header__logo" href="/">PC Power Calc</a>
+    </header>
+
+    <main class="page page--feed">
+        <div class="feed">
+            <video class="feed__video"
+                   poster="{{ c.image_url }}"
+                   autoplay muted loop playsinline>
+                <source src="{{ c.video_url }}" type="video/mp4">
+            </video>
+
+            <div class="feed__overlay">
+                <div class="feed__chips">
+                    <span class="chip">{{ c.component_type }}</span>
+                    <span class="chip">{{ c.tdp_watt }} Вт</span>
+                </div>
+
+                <h1 class="feed__title">{{ c.title }}</h1>
+
+                <label class="feed__description">
+                    <input class="feed__toggle" type="checkbox" hidden>
+                    <span class="feed__text feed__text--short">
+                        {{ c.description[:70] }}…<span class="feed__more">ещё</span>
+                    </span>
+                    <span class="feed__text feed__text--full">
+                        {{ c.description }}<span class="feed__more">скрыть</span>
+                    </span>
+                </label>
+
+                <div class="feed__actions">
+                    <span class="likes likes--accent">♥ {{ c.likes_count }}</span>
+                    <a class="button" href="/component/{{ c.id }}?next=true">Следующий →</a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    {% include "tabbar.html" %}
+</body>
+</html>

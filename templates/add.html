@@ -1,0 +1,73 @@
+{% set active = 'add' %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Добавление компонента — PC Power Calc</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <header class="header">
+        <a class="header__logo" href="/">PC Power Calc</a>
+    </header>
+
+    <main class="page page--add">
+        <h1 class="page__title">Добавление</h1>
+
+        {% if c %}
+        <section class="group">
+            <h2 class="group__title">Изображение</h2>
+            <div class="media">
+                <img class="media__preview" src="{{ c.image_url }}" alt="{{ c.title }}">
+                <div class="media__info">
+                    <span class="media__name">{{ c.image_url.split('/')[-1] }}</span>
+                    <span class="media__action">изменить</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="group">
+            <h2 class="group__title">Видео</h2>
+            <div class="media">
+                <video class="media__preview" poster="{{ c.image_url }}" muted>
+                    <source src="{{ c.video_url }}" type="video/mp4">
+                </video>
+                <div class="media__info">
+                    <span class="media__name">{{ c.video_url.split('/')[-1] }}</span>
+                    <span class="media__action">изменить</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="group">
+            <h2 class="group__title">Описание</h2>
+            <label class="field">
+                <span class="field__label">Название</span>
+                <input class="field__input" type="text" value="{{ c.title }}">
+            </label>
+            <label class="field">
+                <span class="field__label">Краткое описание</span>
+                <textarea class="field__input field__input--area" rows="4">{{ c.description }}</textarea>
+            </label>
+        </section>
+
+        <section class="group">
+            <h2 class="group__title">Характеристики</h2>
+            <label class="field">
+                <span class="field__label">Тип компонента</span>
+                <input class="field__input" type="text" value="{{ c.component_type }}">
+            </label>
+            <label class="field">
+                <span class="field__label">Энергопотребление, Вт</span>
+                <input class="field__input" type="number" value="{{ c.tdp_watt }}">
+            </label>
+        </section>
+        {% else %}
+        <p class="empty">Черновик отсутствует.</p>
+        {% endif %}
+    </main>
+
+    {% include "tabbar.html" %}
+</body>
+</html>

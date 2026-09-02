@@ -53,10 +53,3 @@ docker exec -it minio_storage mc anonymous set public myminio/components
 Веб-консоль: `http://localhost:9001` (логин `root`, пароль `rootpassword`).
 
 Пример ссылки на файл: `http://localhost:9000/components/gpu-rtx-4070.jpg`
-
-## Состояние работы
-
-Выполнено: макет в Figma, развёртывание MinIO и загрузка медиафайлов.
-
-В работе: приложение на FastAPI + Jinja2 (три GET-запроса, коллекция компонентов
-в памяти без БД, шаблонизация, стили).
