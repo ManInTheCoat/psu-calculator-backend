@@ -24,7 +24,7 @@
 | Шаблонизация | Jinja2 |
 | БД | PostgreSQL + SQLAlchemy |
 | Объектное хранилище | MinIO |
-| Фронтенд | React + Redux Toolkit (отдельный репозиторий) |
+| Фронтенд | React + Redux Toolkit |
 
 ## Структура репозитория
 
