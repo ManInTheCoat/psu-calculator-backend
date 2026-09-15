@@ -4,44 +4,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ c.title }} — PC Power Calc</title>
+    <title>{{ power_component.title }} — PC Power Calc</title>
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
     <header class="header">
-        <a class="header__logo" href="/">PC Power Calc</a>
+        <a class="header__logo" href="/power_components">PC Power Calc</a>
     </header>
 
     <main class="page page--feed">
         <div class="feed">
             <video class="feed__video"
-                   poster="{{ c.image_url }}"
+                   poster="{{ power_component.image_url }}"
                    autoplay muted loop playsinline>
-                <source src="{{ c.video_url }}" type="video/mp4">
+                <source src="{{ power_component.video_url }}" type="video/mp4">
             </video>
 
-            <div class="feed__overlay">
-                <div class="feed__chips">
-                    <span class="chip">{{ c.component_type }}</span>
-                    <span class="chip">{{ c.tdp_watt }} Вт</span>
+            <aside class="feed__side">
+                <div class="feed__param">
+                    <span class="feed__icon">⚡</span>
+                    <span class="feed__value">{{ power_component.power_watt }} Вт</span>
                 </div>
+                <div class="feed__param">
+                    <span class="feed__icon">⚖</span>
+                    <span class="feed__value">{{ power_component.weight_gram }} г</span>
+                </div>
+                <div class="feed__param">
+                    <span class="feed__icon feed__icon--like">♥</span>
+                    <span class="feed__value">{{ power_component.likes_count }}</span>
+                </div>
+                <a class="button feed__next" href="/power_components/feed/{{ power_component.id }}?next=true">След. →</a>
+            </aside>
 
-                <h1 class="feed__title">{{ c.title }}</h1>
+            <div class="feed__overlay">
+                <h1 class="feed__title">{{ power_component.title }}</h1>
 
                 <label class="feed__description">
                     <input class="feed__toggle" type="checkbox" hidden>
                     <span class="feed__text feed__text--short">
-                        {{ c.description[:70] }}…<span class="feed__more">ещё</span>
+                        {{ power_component.description[:70] }}…<span class="feed__more">ещё</span>
                     </span>
                     <span class="feed__text feed__text--full">
-                        {{ c.description }}<span class="feed__more">скрыть</span>
+                        {{ power_component.description }}<span class="feed__more">скрыть</span>
                     </span>
                 </label>
-
-                <div class="feed__actions">
-                    <span class="likes likes--accent">♥ {{ c.likes_count }}</span>
-                    <a class="button" href="/component/{{ c.id }}?next=true">Следующий →</a>
-                </div>
             </div>
         </div>
     </main>

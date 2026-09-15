@@ -9,34 +9,50 @@
 </head>
 <body>
     <header class="header">
-        <a class="header__logo" href="/">PC Power Calc</a>
+        <a class="header__logo" href="/power_components">PC Power Calc</a>
     </header>
 
     <main class="page page--tile">
-        <form class="filter" method="get" action="/">
-            <label class="filter__label" for="max_tdp">Макс. TDP, Вт</label>
+        <form class="filter" method="get" action="/power_components">
+            <label class="filter__label" for="max_power">
+                Мощность до <b class="filter__value">{{ max_power }} Вт</b>
+            </label>
             <div class="filter__row">
-                <input class="filter__input"
-                       type="number"
-                       id="max_tdp"
-                       name="max_tdp"
-                       min="0"
-                       placeholder="например, 150"
-                       value="{{ max_tdp if max_tdp is not none else '' }}">
+                <input class="filter__slider"
+                       type="range"
+                       id="max_power"
+                       name="max_power"
+                       min="{{ power_min }}"
+                       max="{{ power_max }}"
+                       step="{{ power_step }}"
+                       list="power_marks"
+                       value="{{ max_power }}">
+                <datalist id="power_marks">
+                    <option value="0"></option>
+                    <option value="100"></option>
+                    <option value="200"></option>
+                    <option value="300"></option>
+                    <option value="400"></option>
+                    <option value="500"></option>
+                </datalist>
                 <button class="filter__button" type="submit">Найти</button>
+            </div>
+            <div class="filter__scale">
+                <span>{{ power_min }} Вт</span>
+                <span>{{ power_max }} Вт</span>
             </div>
         </form>
 
-        {% if components %}
+        {% if power_components %}
         <ul class="tiles">
-            {% for c in components %}
+            {% for power_component in power_components %}
             <li class="tile">
-                <a class="tile__link" href="/component/{{ c.id }}">
-                    <img class="tile__image" src="{{ c.image_url }}" alt="{{ c.title }}">
-                    <h2 class="tile__title">{{ c.title }}</h2>
+                <a class="tile__link" href="/power_components/feed/{{ power_component.id }}">
+                    <img class="tile__image" src="{{ power_component.image_url }}" alt="{{ power_component.title }}">
+                    <h2 class="tile__title">{{ power_component.title }}</h2>
                     <div class="tile__meta">
-                        <span class="chip">{{ c.tdp_watt }} Вт</span>
-                        <span class="likes">♥ {{ c.likes_count }}</span>
+                        <span class="chip">⚡ {{ power_component.power_watt }} Вт</span>
+                        <span class="likes">♥ {{ power_component.likes_count }}</span>
                     </div>
                 </a>
             </li>

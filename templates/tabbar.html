@@ -1,16 +1,16 @@
 <nav class="tabbar">
     <a class="tabbar__item {% if active == 'feed' %}tabbar__item--active{% endif %}"
-       href="/component/{{ first_published_id() }}">
+       href="/power_components/feed/{{ first_published_power_component_id() }}">
         <span class="tabbar__icon">◉</span>
         <span class="tabbar__label">Лента</span>
     </a>
     <a class="tabbar__item {% if active == 'add' %}tabbar__item--active{% endif %}"
-       href="/add">
+       href="/power_components/draft">
         <span class="tabbar__icon">⊕</span>
         <span class="tabbar__label">Добавление</span>
     </a>
     <a class="tabbar__item {% if active == 'tile' %}tabbar__item--active{% endif %}"
-       href="/">
+       href="/power_components">
         <span class="tabbar__icon">▦</span>
         <span class="tabbar__label">Плитка</span>
     </a>

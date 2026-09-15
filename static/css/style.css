@@ -1,9 +1,12 @@
 :root {
-    --accent: #FD8C0B;      /* логотип DNS, кнопка «Каталог», активные элементы */
-    --text: #333333;        /* заголовки и основной текст */
-    --text-muted: #AFAFAF;  /* второстепенный текст, подписи «Обязательно» */
-    --border: #F7F7F7;      /* разделители строк, фон страниц и плашек */
-    --white: #FFFFFF;       /* фон карточек и блоков */
+    --accent: #FD8C0B;        /* оранжевый акцент — все кнопки и активные элементы */
+    --accent-hover: #E07B06;  /* оранжевый при наведении */
+    --text: #333333;          /* заголовки и основной текст */
+    --text-muted: #AFAFAF;    /* второстепенный текст, подписи */
+    --bg: #F2F2F2;            /* светло-серый фон страниц */
+    --border: #E9E9E9;        /* границы и разделители отделены от фона */
+    --white: #FFFFFF;         /* фон карточек и нижней панели — белый */
+    --radius-button: 6px;     /* кнопки «чуть скруглённые» */
 }
 
 * {
@@ -14,7 +17,7 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-    background: var(--border);
+    background: var(--bg);
     color: var(--text);
     padding-bottom: 72px;
     max-width: 420px;
@@ -59,7 +62,7 @@ body {
 
 .chip {
     display: inline-block;
-    background: var(--border);
+    background: var(--bg);
     color: var(--text);
     font-size: 12px;
     font-weight: 500;
@@ -88,7 +91,11 @@ body {
     font-weight: 700;
     text-decoration: none;
     padding: 10px 16px;
-    border-radius: 8px;
+    border-radius: var(--radius-button);
+}
+
+.button:hover {
+    background: var(--accent-hover);
 }
 
 /* ---------- Плитка: фильтр ---------- */
@@ -110,29 +117,59 @@ body {
     gap: 10px;
 }
 
-.filter__input {
-    flex: 1;
-    background: var(--white);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px 14px;
-    font-size: 14px;
-    color: var(--text);
+.filter__value {
+    color: var(--accent);
 }
 
-.filter__input::placeholder {
+.filter__slider {
+    flex: 1;
+    min-width: 0;
+    appearance: none;
+    -webkit-appearance: none;
+    height: 36px;
+    background: transparent;
+    cursor: pointer;
+}
+
+.filter__slider::-webkit-slider-runnable-track {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--white);
+    border: 1px solid var(--border);
+}
+
+.filter__slider::-webkit-slider-thumb {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    margin-top: -8px;
+    border: none;
+    border-radius: 50%;
+    background: var(--accent);
+}
+
+.filter__scale {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
     color: var(--text-muted);
+    margin-top: 2px;
 }
 
 .filter__button {
     background: var(--accent);
     color: var(--white);
     border: none;
-    border-radius: 8px;
-    padding: 0 22px;
+    border-radius: var(--radius-button);
+    padding: 10px 22px;
     font-size: 14px;
     font-weight: 700;
     cursor: pointer;
+}
+
+.filter__button:hover {
+    background: var(--accent-hover);
 }
 
 /* ---------- Плитка: сетка карточек ---------- */
@@ -169,7 +206,7 @@ body {
     width: 100%;
     height: 110px;
     object-fit: contain;
-    background: var(--border);
+    background: var(--bg);
     border-radius: 8px;
     margin-bottom: 10px;
 }
@@ -216,17 +253,56 @@ body {
 .feed__overlay {
     position: absolute;
     left: 12px;
-    right: 12px;
+    right: 96px;
     bottom: 12px;
     background: rgba(255, 255, 255, 0.92);
     border-radius: 12px;
     padding: 14px;
 }
 
-.feed__chips {
+.feed__side {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    width: 76px;
     display: flex;
-    gap: 8px;
-    margin-bottom: 10px;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.feed__param {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    background: rgba(255, 255, 255, 0.92);
+    border-radius: 12px;
+    padding: 8px 6px;
+    width: 100%;
+}
+
+.feed__icon {
+    font-size: 20px;
+    line-height: 1;
+    color: var(--text);
+}
+
+.feed__icon--like {
+    color: var(--accent);
+}
+
+.feed__value {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+    white-space: nowrap;
+}
+
+.feed__next {
+    width: 100%;
+    text-align: center;
+    padding: 10px 6px;
 }
 
 .feed__title {
@@ -241,7 +317,6 @@ body {
     line-height: 1.45;
     color: var(--text);
     cursor: pointer;
-    margin-bottom: 12px;
 }
 
 .feed__more {
@@ -260,12 +335,6 @@ body {
 
 .feed__toggle:checked ~ .feed__text--full {
     display: inline;
-}
-
-.feed__actions {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
 }
 
 /* ---------- Добавление ---------- */
@@ -298,7 +367,7 @@ body {
     width: 64px;
     height: 64px;
     object-fit: contain;
-    background: var(--border);
+    background: var(--bg);
     border-radius: 8px;
     flex-shrink: 0;
 }
@@ -340,9 +409,9 @@ body {
 
 .field__input {
     width: 100%;
-    background: var(--border);
+    background: var(--bg);
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: var(--radius-button);
     padding: 10px 12px;
     font-size: 13px;
     font-family: inherit;
