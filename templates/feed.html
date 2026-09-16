@@ -15,9 +15,12 @@
     <main class="page page--feed">
         <div class="feed">
             <video class="feed__video"
-                   poster="{{ power_component.image_url }}"
+                   poster="{{ power_component.image_url or '/static/img/default-component.png' }}"
                    autoplay muted loop playsinline>
+                {% if power_component.video_url %}
                 <source src="{{ power_component.video_url }}" type="video/mp4">
+                {% endif %}
+                <source src="/static/video/default-component.mp4" type="video/mp4">
             </video>
 
             <aside class="feed__side">
@@ -31,7 +34,7 @@
                 </div>
                 <div class="feed__param">
                     <span class="feed__icon feed__icon--like">♥</span>
-                    <span class="feed__value">{{ power_component.likes_count }}</span>
+                    <span class="feed__value">{{ likes_count }}</span>
                 </div>
                 <a class="button feed__next" href="/power_components/feed/{{ power_component.id }}?next=true">След. →</a>
             </aside>

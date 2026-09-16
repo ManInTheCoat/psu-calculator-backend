@@ -1,68 +1,38 @@
-# Лабораторная 1 — Дизайн и базовая шаблонизация
+# Лабораторная 2 — база данных и ORM
 
-Тема 18: Определение необходимой мощности блока питания для ПК.
+БД: PostgreSQL, ORM: SQLAlchemy 2.0 (async), миграции: Alembic. Три таблицы:
 
-## Предметная область
-
-| Общий термин | Тема 18 |
+| Таблица | Описание |
 |---|---|
-| Пользователь | Сборщик — собирает конфигурацию ПК |
-| Модератор | Эксперт — редактирует каталог компонентов |
-| Услуга | Компонент — процессор, видеокарта и др. из каталога |
-| Заявка | Конфигурация — расчёт БП для набора компонентов |
+| `users` | Пользователи (`id`, `login`) |
+| `power_components` | Компоненты: `title`, `description`, `status` (`draft`/`published`/`deleted`), `image_url`, `video_url`, `power_watt`, `weight_gram`, `created_at`, `formed_at`, `creator_id` (FK → `users`) |
+| `power_component_likes` | Лайки, м-м: `user_id` (FK → `users`), `power_component_id` (FK → `power_components`) |
 
-Поля по предметной области:
+У пользователя может быть не более одного черновика — ограничение задано частичным уникальным индексом в БД (`status = 'draft'`).
+Каскадное удаление не используется: внешние ключи со стандартным поведением `RESTRICT`.
 
-- `power_watt` — мощность (энергопотребление), Вт (числовое, используется для фильтрации)
-- `weight_gram` — вес, г (числовое)
+Шесть HTTP-методов:
 
-Коллекция в коде и адреса методов названы по теме: `power_components`.
+| Метод | Адрес | Реализация |
+|---|---|---|
+| GET | `/power_components?max_power=...` | ORM |
+| GET | `/power_components/feed` | ORM |
+| GET | `/power_components/feed/{id}?next=true` | ORM |
+| GET | `/power_components/draft` | ORM |
+| POST | `/power_components/draft` | ORM |
+| POST | `/power_components/{id}/publish` | ORM |
+| POST | `/power_components/{id}/delete` | сырой SQL (`UPDATE ... SET status = 'deleted'`) |
 
-Три GET-метода:
+Если у изображения/видео пустой `url` или файл недоступен по ссылке, в интерфейсе подставляются заглушки из `static/img/default-component.png` и `static/video/default-component.mp4`.
 
-| Адрес | Страница |
-|---|---|
-| `GET /power_components?max_power=...` | плитка (каталог) с фильтрацией по мощности |
-| `GET /power_components/feed/{id}?next=true` | лента |
-| `GET /power_components/draft` | добавление (черновик) |
-
-## Дизайн
-
-Макет трёх страниц выполнен в Figma в портретном режиме (390×844):
-
-- **Плитка** — каталог компонентов в 2 колонки, фильтрация по мощности слайдером с кнопкой
-- **Лента** — вертикальное видео компонента, параметры и иконки справа поверх него
-- **Добавление** — компонент в статусе «черновик», поля разделены
-
-Стилистика скопирована с раздела «Конфигуратор ПК» сайта DNS-shop (dns-shop.ru).
-
-| Роль | Hex |
-|---|---|
-| Акцент — оранжевые кнопки, активная вкладка | `#FD8C0B` |
-| Основной текст | `#333333` |
-| Приглушённый текст | `#AFAFAF` |
-| Светло-серый фон страниц | `#F2F2F2` |
-| Границы и разделители | `#E9E9E9` |
-| Фон карточек и нижней панели | `#FFFFFF` |
-
-Кнопки оранжевые и чуть скруглённые (радиус 6px), карточки и нижняя панель белые на светло-сером фоне.
-Также скопированы форма карточек со скруглением и hover-состояние карточек каталога.
-
-## MinIO
-
-Изображения и видео компонентов хранятся в объектном хранилище MinIO, бакет `power-components`.
-Имена файлов на латинице, в модели хранятся двумя отдельными полями (`image_url`, `video_url`).
-
-Запуск:
+### Запуск
 
 ```bash
 docker compose up -d
-
-docker exec -it minio_storage mc alias set myminio http://localhost:9000 root rootpassword
-docker exec -it minio_storage mc mb myminio/power-components
-docker exec -it minio_storage mc anonymous set public myminio/power-components
+alembic upgrade head
+python main.py
 ```
 
-Веб-консоль: `http://localhost:9001` (логин `root`, пароль `rootpassword`).
+Переменные окружения — в `.env` (см. `.env.example` при наличии), подключение к БД настраивается через `core/config.py`.
 
-Пример ссылки на файл: `http://localhost:9000/power-components/gpu-rtx-4070.jpg`
+Adminer: `http://localhost:8081` (система PostgreSQL, сервер `postgres`, пользователь `pc_builder`, пароль `pc_builder_pass`, БД `pc_power_db`).

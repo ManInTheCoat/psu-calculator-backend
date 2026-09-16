@@ -45,16 +45,22 @@
 
         {% if power_components %}
         <ul class="tiles">
-            {% for power_component in power_components %}
+            {% for item in power_components %}
+            {% set power_component = item.component %}
             <li class="tile">
                 <a class="tile__link" href="/power_components/feed/{{ power_component.id }}">
-                    <img class="tile__image" src="{{ power_component.image_url }}" alt="{{ power_component.title }}">
+                    <img class="tile__image"
+                         src="{{ power_component.image_url or '/static/img/default-component.png' }}"
+                         alt="{{ power_component.title }}">
                     <h2 class="tile__title">{{ power_component.title }}</h2>
                     <div class="tile__meta">
                         <span class="chip">⚡ {{ power_component.power_watt }} Вт</span>
-                        <span class="likes">♥ {{ power_component.likes_count }}</span>
+                        <span class="likes">♥ {{ item.likes_count }}</span>
                     </div>
                 </a>
+                <form class="tile__delete" method="post" action="/power_components/{{ power_component.id }}/delete">
+                    <button class="button button--danger" type="submit">Удалить</button>
+                </form>
             </li>
             {% endfor %}
         </ul>
