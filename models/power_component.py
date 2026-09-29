@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import CheckConstraint, ForeignKey, Index, text
+from sqlalchemy import CheckConstraint, ForeignKey, Index, String, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from db.base import Base
@@ -22,11 +22,11 @@ class PowerComponent(Base):
     )
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    title: Mapped[str] = mapped_column()
-    description: Mapped[str | None] = mapped_column(nullable=True)
-    status: Mapped[str] = mapped_column(default="draft")
-    image_url: Mapped[str | None] = mapped_column(nullable=True)
-    video_url: Mapped[str | None] = mapped_column(nullable=True)
+    title: Mapped[str] = mapped_column(String(100))
+    description: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    status: Mapped[str] = mapped_column(String(20), default="draft")
+    image_url: Mapped[str] = mapped_column(String(255), default="", server_default="")
+    video_url: Mapped[str] = mapped_column(String(255), default="", server_default="")
     power_watt: Mapped[int | None] = mapped_column(nullable=True)
     weight_gram: Mapped[int | None] = mapped_column(nullable=True)
     created_at: Mapped[datetime] = mapped_column(server_default=text("now()"))

@@ -844,7 +844,8 @@
 									"$ref": "AAAAAAGgqP2Ng+olkGk="
 								},
 								"cardinality": "0..*"
-							}
+							},
+							"identifying": false
 						}
 					],
 					"columns": [

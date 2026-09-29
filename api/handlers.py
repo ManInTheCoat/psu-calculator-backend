@@ -58,7 +58,7 @@ async def get_power_components_tile(
 
     return templates.TemplateResponse(
         request=request,
-        name="tile.html",
+        name="power_components_tile.html",
         context={
             "power_components": tile_power_components,
             "max_power": current_max_power,
@@ -142,7 +142,7 @@ async def get_power_component_feed(
 
     return templates.TemplateResponse(
         request=request,
-        name="feed.html",
+        name="power_component_feed.html",
         context={"power_component": component, "likes_count": likes_count},
     )
 
@@ -159,15 +159,13 @@ async def get_power_component_draft(request: Request, db: AsyncSession = Depends
 
     return templates.TemplateResponse(
         request=request,
-        name="add.html",
+        name="power_component_draft.html",
         context={"power_component": draft},
     )
 
 @router.post("/power_components/draft")
 async def create_power_component_draft(
     title: str = Form(...),
-    image_url: str | None = Form(default=None),
-    video_url: str | None = Form(default=None),
     db: AsyncSession = Depends(get_db),
 ):
     """Кнопка «Далее»: создаёт черновик текущего пользователя."""
@@ -181,16 +179,14 @@ async def create_power_component_draft(
     if draft is None:
         draft = PowerComponent(
             title=title,
-            image_url=image_url or None,
-            video_url=video_url or None,
+            image_url="",
+            video_url="",
             status="draft",
             creator_id=CURRENT_USER_ID,
         )
         db.add(draft)
     else:
         draft.title = title
-        draft.image_url = image_url or draft.image_url
-        draft.video_url = video_url or draft.video_url
 
     await db.commit()
 
