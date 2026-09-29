@@ -15,80 +15,73 @@
     <main class="page page--add">
         <h1 class="page__title">Добавление</h1>
 
-        {% if power_component %}
-        <section class="group">
-            <h2 class="group__title">Изображение</h2>
-            <div class="media">
-                <img class="media__preview"
-                     src="{{ power_component.image_url or '/static/img/default-component.png' }}"
-                     alt="{{ power_component.title }}">
-                <div class="media__info">
-                    <span class="media__name">{{ power_component.image_url or 'не выбрано' }}</span>
-                </div>
-            </div>
-        </section>
+        {% set image_src = (power_component.image_url if power_component else '') or '/static/img/default-component.png' %}
+        {% set video_src = power_component.video_url if power_component else '' %}
 
-        <section class="group">
-            <h2 class="group__title">Видео</h2>
-            <div class="media">
-                <video class="media__preview"
-                       poster="{{ power_component.image_url or '/static/img/default-component.png' }}"
-                       muted>
-                    {% if power_component.video_url %}
-                    <source src="{{ power_component.video_url }}" type="video/mp4">
+        <form method="post"
+              action="{% if power_component %}/power_components/{{ power_component.id }}/publish{% else %}/power_components/draft{% endif %}">
+
+            <section class="group">
+                <h2 class="group__title">Изображение</h2>
+                <div class="media">
+                    <img class="media__preview" src="{{ image_src }}" alt="Изображение компонента">
+                    {% if not power_component %}
+                    <input class="field__input media__file" type="file" accept="image/*">
                     {% endif %}
-                    <source src="/static/video/default-component.mp4" type="video/mp4">
-                </video>
-                <div class="media__info">
-                    <span class="media__name">{{ power_component.video_url or 'не выбрано' }}</span>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <form class="group" method="post" action="/power_components/{{ power_component.id }}/publish">
-            <h2 class="group__title">Описание</h2>
-            <label class="field">
-                <span class="field__label">Название</span>
-                <input class="field__input" type="text" value="{{ power_component.title }}" disabled>
-            </label>
-            <label class="field">
-                <span class="field__label">Краткое описание</span>
-                <textarea class="field__input field__input--area" name="description" rows="4" required>{{ power_component.description or '' }}</textarea>
-            </label>
+            <section class="group">
+                <h2 class="group__title">Видео</h2>
+                <div class="media">
+                    <video class="media__preview" poster="{{ image_src }}" muted>
+                        {% if video_src %}
+                        <source src="{{ video_src }}" type="video/mp4">
+                        {% endif %}
+                        <source src="/static/video/default-component.mp4" type="video/mp4">
+                    </video>
+                    {% if not power_component %}
+                    <input class="field__input media__file" type="file" accept="video/*">
+                    {% endif %}
+                </div>
+            </section>
 
-            <h2 class="group__title">Характеристики</h2>
-            <label class="field">
-                <span class="field__label">Мощность, Вт</span>
-                <input class="field__input" type="number" name="power_watt" min="0" max="500"
-                       value="{{ power_component.power_watt or '' }}" required>
-            </label>
-            <label class="field">
-                <span class="field__label">Вес, г</span>
-                <input class="field__input" type="number" name="weight_gram" min="0"
-                       value="{{ power_component.weight_gram or '' }}" required>
-            </label>
+            {% if power_component %}
+            <section class="group">
+                <h2 class="group__title">Описание</h2>
+                <label class="field">
+                    <span class="field__label">Краткое описание</span>
+                    <textarea class="field__input field__input--area" name="description" rows="4" required>{{ power_component.description or '' }}</textarea>
+                </label>
+            </section>
+
+            <section class="group">
+                <h2 class="group__title">Характеристики</h2>
+                <label class="field">
+                    <span class="field__label">Мощность, Вт</span>
+                    <input class="field__input" type="number" name="power_watt" min="0" max="500"
+                           value="{{ power_component.power_watt or '' }}" required>
+                </label>
+                <label class="field">
+                    <span class="field__label">Вес, г</span>
+                    <input class="field__input" type="number" name="weight_gram" min="0"
+                           value="{{ power_component.weight_gram or '' }}" required>
+                </label>
+            </section>
 
             <button class="button" type="submit">Опубликовать</button>
-        </form>
-        {% else %}
-        <form class="group" method="post" action="/power_components/draft">
-            <h2 class="group__title">Основное</h2>
-            <label class="field">
-                <span class="field__label">Название</span>
-                <input class="field__input" type="text" name="title" required>
-            </label>
-            <label class="field">
-                <span class="field__label">Изображение</span>
-                <input class="field__input" type="file" accept="image/*">
-            </label>
-            <label class="field">
-                <span class="field__label">Видео</span>
-                <input class="field__input" type="file" accept="video/*">
-            </label>
+            {% else %}
+            <section class="group">
+                <h2 class="group__title">Описание</h2>
+                <label class="field">
+                    <span class="field__label">Название</span>
+                    <input class="field__input" type="text" name="title" required>
+                </label>
+            </section>
 
             <button class="button" type="submit">Далее</button>
+            {% endif %}
         </form>
-        {% endif %}
     </main>
 
     {% include "power_components_tabbar.html" %}

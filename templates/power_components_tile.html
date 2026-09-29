@@ -35,7 +35,7 @@
                     <option value="400"></option>
                     <option value="500"></option>
                 </datalist>
-                <button class="filter__button" type="submit">Найти</button>
+                <button class="button" type="submit">Найти</button>
             </div>
             <div class="filter__scale">
                 <span>{{ power_min }} Вт</span>
@@ -59,7 +59,7 @@
                     </div>
                 </a>
                 <form class="tile__delete" method="post" action="/power_components/{{ power_component.id }}/delete">
-                    <button class="button button--danger" type="submit">Удалить</button>
+                    <button class="button" type="submit">Удалить</button>
                 </form>
             </li>
             {% endfor %}
