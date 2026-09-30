@@ -16,6 +16,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from core.current_user import get_current_user
 from db.session import get_db
 from models.power_component import PowerComponent
 from models.user import User
@@ -28,7 +29,8 @@ POWER_MIN = 0
 POWER_MAX = 500
 POWER_STEP = 10
 
-CURRENT_USER_ID = 1
+# Пользователь-константа из singleton
+CURRENT_USER_ID = get_current_user().id
 
 
 @router.get("/")
