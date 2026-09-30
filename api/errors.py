@@ -1,6 +1,9 @@
 """Единый JSON-формат ошибок для методов /api:
 
     {"status": "fail", "message": "..."}
+
+Ошибки валидации (неверный тип, лишние/системные поля, id вне диапазона)
+возвращаются с кодом 400.
 """
 
 import logging
@@ -29,6 +32,8 @@ def _validation_message(exc: RequestValidationError) -> str:
         message = error.get("msg", "")
         if error.get("type") == "extra_forbidden":
             message = "поле нельзя передавать с клиента"
+        elif "Expected UploadFile" in message:
+            message = "ожидается файл, а не текст"
         parts.append(f"{location}: {message}" if location else message)
     return "; ".join(parts) or "Некорректный запрос"
 

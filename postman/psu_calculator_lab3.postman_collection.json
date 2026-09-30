@@ -1,0 +1,1119 @@
+{
+  "info": {
+    "_postman_id": "8733dcdc-f2cf-463c-a569-d2d1847d24f5",
+    "name": "PC Power Calc — ЛР3 API",
+    "description": "Веб-сервис расчёта мощности блока питания (тема 18). Основные запросы 01–11 выполнять по порядку, затем папку «Ошибки».",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Основные запросы",
+      "item": [
+        {
+          "name": "01 GET Список компонентов (фильтр по мощности)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Ответ в JSON\", () => pm.response.to.be.json);",
+                  "pm.test(\"status = success\", () => pm.expect(pm.response.json().status).to.eql(\"success\"));",
+                  "pm.test(\"Все мощности <= 300\", () => pm.response.json().data.forEach(c => pm.expect(c.power_watt).to.be.at.most(300)));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/power_components?max_power=300",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "power_components"
+              ],
+              "query": [
+                {
+                  "key": "max_power",
+                  "value": "300"
+                }
+              ]
+            },
+            "description": "Только опубликованные. max_power — мощность до, Вт (0–500). is_mine = 1, если создатель — текущий пользователь."
+          }
+        },
+        {
+          "name": "02 POST Создание черновика с фото и видео",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Ответ в JSON\", () => pm.response.to.be.json);",
+                  "pm.test(\"status = success\", () => pm.expect(pm.response.json().status).to.eql(\"success\"));",
+                  "const d = pm.response.json().data;",
+                  "pm.collectionVariables.set(\"componentId\", d.id);",
+                  "pm.test(\"Статус draft\", () => pm.expect(d.status).to.eql(\"draft\"));",
+                  "pm.test(\"Фото в MinIO\", () => pm.expect(d.image_url).to.include(\"/power-components/power_component_\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/power_components",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "power_components"
+              ]
+            },
+            "description": "multipart/form-data: title, image (PNG/JPEG/GIF/WEBP до 5 МБ), video (MP4/MOV/WEBM до 50 МБ). Файлы сохраняются в MinIO, ссылки — в image_url и video_url. Id созданного черновика сохраняется в переменную componentId.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "title",
+                  "value": "be quiet! Pure Power 12 M 750W",
+                  "type": "text"
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": "C:\\Users\\erofe\\Documents\\Материалы_МГТУ\\5_semestr\\РИП\\psu-calculator-backend\\static\\img\\default-component.png"
+                },
+                {
+                  "key": "video",
+                  "type": "file",
+                  "src": "C:\\Users\\erofe\\Documents\\Материалы_МГТУ\\5_semestr\\РИП\\psu-calculator-backend\\static\\video\\default-component.mp4"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "03 GET Черновик текущего пользователя",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Ответ в JSON\", () => pm.response.to.be.json);",
+                  "pm.test(\"status = success\", () => pm.expect(pm.response.json().status).to.eql(\"success\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/power_components/draft",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "power_components",
+                "draft"
+              ]
+            },
+            "description": "Ид не указывается: черновик берётся по пользователю-константе (singleton)."
+          }
+        },
+        {
+          "name": "04 PUT Публикация черновика",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Ответ в JSON\", () => pm.response.to.be.json);",
+                  "pm.test(\"status = success\", () => pm.expect(pm.response.json().status).to.eql(\"success\"));",
+                  "pm.test(\"Статус published\", () => pm.expect(pm.response.json().data.status).to.eql(\"published\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/power_components/{{componentId}}/publish",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "power_components",
+                "{{componentId}}",
+                "publish"
+              ]
+            },
+            "description": "Статус draft -> published, formed_at = now(). Системные поля передавать нельзя.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Блок питания 750 Вт с сертификатом 80 PLUS Gold\",\n  \"power_watt\": 15,\n  \"weight_gram\": 1600\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "05 GET Лента без ид",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Ответ в JSON\", () => pm.response.to.be.json);",
+                  "pm.test(\"status = success\", () => pm.expect(pm.response.json().status).to.eql(\"success\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/power_components/feed",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "power_components",
+                "feed"
+              ]
+            },
+            "description": "Первый опубликованный компонент. creator — вложенная сериализация пользователя."
+          }
+        },
+        {
+          "name": "06 GET Лента по ид, следующий (?next=true)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Ответ в JSON\", () => pm.response.to.be.json);",
+                  "pm.test(\"status = success\", () => pm.expect(pm.response.json().status).to.eql(\"success\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/power_components/feed/{{componentId}}?next=true",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "power_components",
+                "feed",
+                "{{componentId}}"
+              ],
+              "query": [
+                {
+                  "key": "next",
+                  "value": "true"
+                }
+              ]
+            },
+            "description": "Следующий опубликованный после указанного ид; после последнего — снова первый."
+          }
+        },
+        {
+          "name": "07 POST Лайк",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Ответ в JSON\", () => pm.response.to.be.json);",
+                  "pm.test(\"status = success\", () => pm.expect(pm.response.json().status).to.eql(\"success\"));",
+                  "pm.test(\"Лайк стоит\", () => pm.expect(pm.response.json().data.is_liked).to.eql(1));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/power_components/{{componentId}}/like",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "power_components",
+                "{{componentId}}",
+                "like"
+              ]
+            },
+            "description": "like = 1 ставит лайк, like = 0 отменяет. Повторный лайк не дублируется.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"like\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "08 DELETE Удаление компонента",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Ответ в JSON\", () => pm.response.to.be.json);",
+                  "pm.test(\"status = success\", () => pm.expect(pm.response.json().status).to.eql(\"success\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/power_components/{{componentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "power_components",
+                "{{componentId}}"
+              ]
+            },
+            "description": "Логическое удаление (status = deleted). Только свои компоненты."
+          }
+        },
+        {
+          "name": "09 POST Регистрация пользователя",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Ответ в JSON\", () => pm.response.to.be.json);",
+                  "pm.test(\"status = success\", () => pm.expect(pm.response.json().status).to.eql(\"success\"));"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.collectionVariables.get(\"registerLogin\") || pm.collectionVariables.get(\"registerLogin\") === \"new_builder\") {",
+                  "  pm.collectionVariables.set(\"registerLogin\", \"builder_\" + Date.now().toString().slice(-6));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "register"
+              ]
+            },
+            "description": "Пароль хранится в виде хеша PBKDF2-SHA256 и не возвращается в ответе.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"{{registerLogin}}\",\n  \"password\": \"builder123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "10 POST Аутентификация (заглушка)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Ответ в JSON\", () => pm.response.to.be.json);",
+                  "pm.test(\"status = success\", () => pm.expect(pm.response.json().status).to.eql(\"success\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "login"
+              ]
+            },
+            "description": "Заглушка до ЛР4.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"{{registerLogin}}\",\n  \"password\": \"builder123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "11 POST Деавторизация (заглушка)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Ответ в JSON\", () => pm.response.to.be.json);",
+                  "pm.test(\"status = success\", () => pm.expect(pm.response.json().status).to.eql(\"success\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "logout"
+              ]
+            },
+            "description": "Заглушка до ЛР4."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ошибки (краевые случаи)",
+      "item": [
+        {
+          "name": "E01 Список: max_power не число",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Ответ в JSON\", () => pm.response.to.be.json);",
+                  "pm.test(\"status = fail\", () => pm.expect(pm.response.json().status).to.eql(\"fail\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/power_components?max_power=abc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "power_components"
+              ],
+              "query": [
+                {
+                  "key": "max_power",
+                  "value": "abc"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "E02 Список: max_power вне диапазона",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Ответ в JSON\", () => pm.response.to.be.json);",
+                  "pm.test(\"status = fail\", () => pm.expect(pm.response.json().status).to.eql(\"fail\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/power_components?max_power=9999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "power_components"
+              ],
+              "query": [
+                {
+                  "key": "max_power",
+                  "value": "9999"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "E03 Лента: id = -1",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Ответ в JSON\", () => pm.response.to.be.json);",
+                  "pm.test(\"status = fail\", () => pm.expect(pm.response.json().status).to.eql(\"fail\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/power_components/feed/-1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "power_components",
+                "feed",
+                "-1"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "E04 Лента: id = 999999999999",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Ответ в JSON\", () => pm.response.to.be.json);",
+                  "pm.test(\"status = fail\", () => pm.expect(pm.response.json().status).to.eql(\"fail\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/power_components/feed/999999999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "power_components",
+                "feed",
+                "999999999999"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "E05 Лента: id не число",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Ответ в JSON\", () => pm.response.to.be.json);",
+                  "pm.test(\"status = fail\", () => pm.expect(pm.response.json().status).to.eql(\"fail\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/power_components/feed/abc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "power_components",
+                "feed",
+                "abc"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "E06 Лента: удалённый компонент",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Ответ в JSON\", () => pm.response.to.be.json);",
+                  "pm.test(\"status = fail\", () => pm.expect(pm.response.json().status).to.eql(\"fail\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/power_components/feed/{{componentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "power_components",
+                "feed",
+                "{{componentId}}"
+              ]
+            },
+            "description": "Запускать после 08 DELETE — удалённые записи на клиент не передаются."
+          }
+        },
+        {
+          "name": "E07 Создание: без названия",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Ответ в JSON\", () => pm.response.to.be.json);",
+                  "pm.test(\"status = fail\", () => pm.expect(pm.response.json().status).to.eql(\"fail\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/power_components",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "power_components"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": "C:\\Users\\erofe\\Documents\\Материалы_МГТУ\\5_semestr\\РИП\\psu-calculator-backend\\static\\img\\default-component.png"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "E08 Создание: в image текст вместо файла",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Ответ в JSON\", () => pm.response.to.be.json);",
+                  "pm.test(\"status = fail\", () => pm.expect(pm.response.json().status).to.eql(\"fail\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/power_components",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "power_components"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "title",
+                  "value": "Test",
+                  "type": "text"
+                },
+                {
+                  "key": "image",
+                  "value": "это не файл",
+                  "type": "text"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "E09 Публикация: передано системное поле status",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Ответ в JSON\", () => pm.response.to.be.json);",
+                  "pm.test(\"status = fail\", () => pm.expect(pm.response.json().status).to.eql(\"fail\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/power_components/{{componentId}}/publish",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "power_components",
+                "{{componentId}}",
+                "publish"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"d\",\n  \"power_watt\": 100,\n  \"weight_gram\": 10,\n  \"status\": \"published\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "E10 Публикация: чужой компонент",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 403\", () => pm.response.to.have.status(403));",
+                  "pm.test(\"Ответ в JSON\", () => pm.response.to.be.json);",
+                  "pm.test(\"status = fail\", () => pm.expect(pm.response.json().status).to.eql(\"fail\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/power_components/{{foreignComponentId}}/publish",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "power_components",
+                "{{foreignComponentId}}",
+                "publish"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"d\",\n  \"power_watt\": 100,\n  \"weight_gram\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "E11 Лайк: like = 5",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Ответ в JSON\", () => pm.response.to.be.json);",
+                  "pm.test(\"status = fail\", () => pm.expect(pm.response.json().status).to.eql(\"fail\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/power_components/{{foreignComponentId}}/like",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "power_components",
+                "{{foreignComponentId}}",
+                "like"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"like\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "E12 Удаление: чужой компонент",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 403\", () => pm.response.to.have.status(403));",
+                  "pm.test(\"Ответ в JSON\", () => pm.response.to.be.json);",
+                  "pm.test(\"status = fail\", () => pm.expect(pm.response.json().status).to.eql(\"fail\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/power_components/{{foreignComponentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "power_components",
+                "{{foreignComponentId}}"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "E13 Регистрация: логин уже занят",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Ответ в JSON\", () => pm.response.to.be.json);",
+                  "pm.test(\"status = fail\", () => pm.expect(pm.response.json().status).to.eql(\"fail\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "register"
+              ]
+            },
+            "description": "Запускать после 09.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"{{registerLogin}}\",\n  \"password\": \"builder123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "E14 Регистрация: короткие логин и пароль",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Ответ в JSON\", () => pm.response.to.be.json);",
+                  "pm.test(\"status = fail\", () => pm.expect(pm.response.json().status).to.eql(\"fail\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "register"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"ab\",\n  \"password\": \"1\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "E15 Несуществующий адрес",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Ответ в JSON\", () => pm.response.to.be.json);",
+                  "pm.test(\"status = fail\", () => pm.expect(pm.response.json().status).to.eql(\"fail\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/power_components_unknown",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "power_components_unknown"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "E16 Неподдерживаемый HTTP-метод",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Статус 405\", () => pm.response.to.have.status(405));",
+                  "pm.test(\"Ответ в JSON\", () => pm.response.to.be.json);",
+                  "pm.test(\"status = fail\", () => pm.expect(pm.response.json().status).to.eql(\"fail\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/power_components/{{foreignComponentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "power_components",
+                "{{foreignComponentId}}"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8000"
+    },
+    {
+      "key": "componentId",
+      "value": "2"
+    },
+    {
+      "key": "foreignComponentId",
+      "value": "3",
+      "description": "Опубликованный компонент другого пользователя"
+    },
+    {
+      "key": "registerLogin",
+      "value": "new_builder"
+    }
+  ]
+}
