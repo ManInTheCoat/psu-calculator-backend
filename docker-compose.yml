@@ -43,6 +43,13 @@ services:
     command: server /data --console-address ":9001"
 
 
+  redis:
+    container_name: pc_power_redis
+    image: redis:8-alpine
+    ports:
+      - "6379:6379"
+
+
 volumes:
   minio-data:
   postgres-data:

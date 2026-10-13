@@ -15,6 +15,11 @@ class Settings(BaseSettings):
     MINIO_SECURE: bool = False
     MINIO_PUBLIC_URL: str = "http://localhost:9000"
 
+    REDIS_HOST: str = "localhost"
+    REDIS_PORT: int = 6379
+    SESSION_COOKIE_NAME: str = "session_id"
+    SESSION_TTL_SECONDS: int = 24 * 60 * 60  # сутки
+
     @property
     def DATABASE_URL(self) -> str:
         return (
