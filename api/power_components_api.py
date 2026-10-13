@@ -1,14 +1,14 @@
 """Веб-сервис. Домен компонентов ПК (услуги): /api/power_components
 
-    GET    /api/power_components?max_power=...        список опубликованных с фильтром по мощности
-    GET    /api/power_components/feed                  лента без ид (первый опубликованный)
-    GET    /api/power_components/feed/{id}?next=true   лента по ид / следующий после ид
-    GET    /api/power_components/draft                 черновик текущего пользователя
-    POST   /api/power_components                       создание черновика + фото и видео в MinIO
-    PUT    /api/power_components/{id}/publish          публикация черновика (draft -> published)
-    DELETE /api/power_components/{id}                  логическое удаление (-> deleted)
-    POST   /api/power_components/{id}/like             лайк: 1 — поставить, 0 — отменить
+    GET    /api/power_components?max_power=...                          список опубликованных с фильтром по мощности
+    GET    /api/power_components/feed?power_component_id=...&next=true  лента
+    GET    /api/power_components/draft                                  черновик текущего пользователя
+    POST   /api/power_components                                        добавление черновика + фото и видео в MinIO
+    PUT    /api/power_components/{id}/publish                           публикация черновика (draft -> published)
+    DELETE /api/power_components/{id}                                   логическое удаление (-> deleted)
+    POST   /api/power_components/{id}/like                              лайк: 1 — поставить, 0 — отменить
 
+Ответ — сами данные без обёрток, результат передаётся HTTP-кодом.
 Текущий пользователь во всех методах берётся из singleton get_current_user().
 """
 
@@ -26,8 +26,7 @@ from core.current_user import CurrentUser, get_current_user
 from db.session import get_db
 from models.power_component import PowerComponent
 from models.power_component_like import PowerComponentLike
-from models.user import User
-from schemas.common import ERROR_RESPONSES, ApiResponse
+from schemas.common import ERROR_RESPONSES
 from schemas.power_component import (
     POWER_MAX,
     POWER_MIN,
@@ -157,7 +156,7 @@ async def _first_published_id(db: AsyncSession, after_id: int = 0) -> int | None
 @router.get(
     "",
     summary="Список опубликованных компонентов с фильтрацией по мощности",
-    response_model=ApiResponse[list[PowerComponentListItemSerializer]],
+    response_model=list[PowerComponentListItemSerializer],
     responses={400: ERROR_RESPONSES[400]},
 )
 async def get_power_components(
@@ -174,7 +173,7 @@ async def get_power_components(
         stmt = stmt.where(PowerComponent.power_watt <= max_power)
 
     rows = (await db.execute(stmt)).all()
-    items = [
+    return [
         PowerComponentListItemSerializer(
             id=component.id,
             title=component.title,
@@ -186,52 +185,39 @@ async def get_power_components(
         )
         for component, likes_count in rows
     ]
-    return ApiResponse(data=items)
 
 
 @router.get(
     "/feed",
-    summary="Лента без ид: первый опубликованный компонент",
-    response_model=ApiResponse[PowerComponentFeedSerializer],
-    responses={404: ERROR_RESPONSES[404]},
-)
-async def get_power_component_feed_first(
-    db: AsyncSession = Depends(get_db),
-    user: CurrentUser = Depends(get_current_user),
-):
-    first_id = await _first_published_id(db)
-    if first_id is None:
-        raise HTTPException(status_code=404, detail="Нет опубликованных компонентов")
-    return ApiResponse(data=await _get_feed_item(db, first_id, user))
-
-
-@router.get(
-    "/feed/{power_component_id}",
-    summary="Лента по ид; с ?next=true — следующий опубликованный после ид",
-    response_model=ApiResponse[PowerComponentFeedSerializer],
+    summary="Лента: без ид — первый опубликованный, с ид — этот компонент, с ид и next=true — следующий",
+    response_model=PowerComponentFeedSerializer,
     responses={400: ERROR_RESPONSES[400], 404: ERROR_RESPONSES[404]},
 )
 async def get_power_component_feed(
-    power_component_id: PowerComponentId,
-    is_next: bool = Query(default=False, alias="next"),
+    power_component_id: int | None = Query(
+        default=None, ge=1, le=INT32_MAX, description="ID компонента; для панели вкладок не указывается"
+    ),
+    is_next: bool = Query(default=False, alias="next", description="true — следующий опубликованный после ID"),
     db: AsyncSession = Depends(get_db),
     user: CurrentUser = Depends(get_current_user),
 ):
-    if is_next:
-        next_id = await _first_published_id(db, after_id=power_component_id)
-        if next_id is None:
-            next_id = await _first_published_id(db)
-        if next_id is None:
-            raise HTTPException(status_code=404, detail="Нет опубликованных компонентов")
-        power_component_id = next_id
+    if power_component_id is None:
+        target_id = await _first_published_id(db)
+    elif is_next:
+        target_id = await _first_published_id(db, after_id=power_component_id) or await _first_published_id(db)
+    else:
+        target_id = power_component_id
 
-    return ApiResponse(data=await _get_feed_item(db, power_component_id, user))
+    if target_id is None:
+        raise HTTPException(status_code=404, detail="Нет опубликованных компонентов")
+
+    return await _get_feed_item(db, target_id, user)
 
 
 @router.get(
     "/draft",
     summary="Черновик текущего пользователя",
-    response_model=ApiResponse[PowerComponentSerializer],
+    response_model=PowerComponentSerializer,
     responses={404: ERROR_RESPONSES[404]},
 )
 async def get_power_component_draft(
@@ -245,14 +231,14 @@ async def get_power_component_draft(
     draft = (await db.execute(stmt)).scalar_one_or_none()
     if draft is None:
         raise HTTPException(status_code=404, detail="У пользователя нет черновика")
-    return ApiResponse(data=PowerComponentSerializer.model_validate(draft))
+    return PowerComponentSerializer.model_validate(draft)
 
 
 @router.post(
     "",
-    summary="Создание черновика с фото и видео (multipart/form-data)",
+    summary="Добавление черновика с фото и видео",
     status_code=status.HTTP_201_CREATED,
-    response_model=ApiResponse[PowerComponentSerializer],
+    response_model=PowerComponentSerializer,
     responses={400: ERROR_RESPONSES[400], 409: ERROR_RESPONSES[409], 500: ERROR_RESPONSES[500]},
 )
 async def create_power_component(
@@ -320,13 +306,13 @@ async def create_power_component(
         raise HTTPException(status_code=500, detail=f"Не удалось сохранить компонент: {exc}") from exc
 
     await db.refresh(component)
-    return ApiResponse(message="Черновик создан", data=PowerComponentSerializer.model_validate(component))
+    return PowerComponentSerializer.model_validate(component)
 
 
 @router.put(
     "/{power_component_id}/publish",
     summary="Публикация черновика: draft -> published",
-    response_model=ApiResponse[PowerComponentSerializer],
+    response_model=PowerComponentSerializer,
     responses={k: ERROR_RESPONSES[k] for k in (400, 403, 404, 409)},
 )
 async def publish_power_component(
@@ -350,13 +336,13 @@ async def publish_power_component(
 
     await db.commit()
     await db.refresh(component)
-    return ApiResponse(message="Компонент опубликован", data=PowerComponentSerializer.model_validate(component))
+    return PowerComponentSerializer.model_validate(component)
 
 
 @router.delete(
     "/{power_component_id}",
     summary="Логическое удаление своего компонента (статус deleted)",
-    response_model=ApiResponse[PowerComponentDeletedSerializer],
+    response_model=PowerComponentDeletedSerializer,
     responses={k: ERROR_RESPONSES[k] for k in (400, 403, 404)},
 )
 async def delete_power_component(
@@ -372,16 +358,13 @@ async def delete_power_component(
     component.status = "deleted"
     await db.commit()
 
-    return ApiResponse(
-        message="Компонент удалён",
-        data=PowerComponentDeletedSerializer(id=component.id, status=component.status),
-    )
+    return PowerComponentDeletedSerializer(id=component.id, status=component.status)
 
 
 @router.post(
     "/{power_component_id}/like",
     summary="Лайк от текущего пользователя: like=1 ставит, like=0 отменяет",
-    response_model=ApiResponse[PowerComponentLikeSerializer],
+    response_model=PowerComponentLikeSerializer,
     responses={k: ERROR_RESPONSES[k] for k in (400, 404)},
 )
 async def like_power_component(
@@ -421,11 +404,8 @@ async def like_power_component(
         )
     ).scalar_one()
 
-    return ApiResponse(
-        message="Лайк поставлен" if body.like == 1 else "Лайк отменён",
-        data=PowerComponentLikeSerializer(
-            power_component_id=component.id,
-            is_liked=body.like,
-            likes_count=likes_count,
-        ),
+    return PowerComponentLikeSerializer(
+        power_component_id=component.id,
+        is_liked=body.like,
+        likes_count=likes_count,
     )

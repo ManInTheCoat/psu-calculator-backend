@@ -1,6 +1,7 @@
-"""Единый JSON-формат ошибок для методов /api:
+"""Ошибки методов /api.
 
-    {"status": "fail", "message": "..."}
+Результат запроса передаётся HTTP-кодом ответа, тело ошибки — стандартное
+для FastAPI: {"detail": "описание ошибки"}.
 
 Ошибки валидации (неверный тип, лишние/системные поля, id вне диапазона)
 возвращаются с кодом 400.
@@ -21,8 +22,8 @@ def _is_api(request: Request) -> bool:
     return request.url.path.startswith("/api")
 
 
-def _fail(status_code: int, message: str) -> JSONResponse:
-    return JSONResponse(status_code=status_code, content={"status": "fail", "message": message})
+def _error(status_code: int, detail: str) -> JSONResponse:
+    return JSONResponse(status_code=status_code, content={"detail": detail})
 
 
 def _validation_message(exc: RequestValidationError) -> str:
@@ -45,15 +46,15 @@ def register_error_handlers(app: FastAPI) -> None:
             return await http_exception_handler(request, exc)
         messages = {404: "Метод не найден", 405: "HTTP-метод не поддерживается"}
         detail = exc.detail if exc.detail not in ("Not Found", "Method Not Allowed") else messages.get(exc.status_code)
-        return _fail(exc.status_code, str(detail))
+        return _error(exc.status_code, str(detail))
 
     @app.exception_handler(RequestValidationError)
     async def handle_validation_error(request: Request, exc: RequestValidationError):
         if not _is_api(request):
             return await request_validation_exception_handler(request, exc)
-        return _fail(400, _validation_message(exc))
+        return _error(400, _validation_message(exc))
 
     @app.exception_handler(Exception)
     async def handle_unexpected_error(request: Request, exc: Exception):
         logger.exception("Необработанная ошибка: %s %s", request.method, request.url.path)
-        return _fail(500, "Внутренняя ошибка сервера")
+        return _error(500, "Внутренняя ошибка сервера")

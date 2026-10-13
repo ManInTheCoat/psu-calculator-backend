@@ -22,7 +22,10 @@ class PowerComponentListItemSerializer(BaseModel):
     power_watt: int | None
     weight_gram: int | None
     likes_count: int
-    is_mine: int = Field(description="1 — создатель компонента совпадает с текущим пользователем, иначе 0")
+    is_mine: int = Field(
+        description="1 — компонент создан текущим пользователем, иначе 0. "
+        "Нужен плитке: кнопка «Удалить» показывается только у своих карточек"
+    )
 
 
 class PowerComponentSerializer(BaseModel):
@@ -58,8 +61,14 @@ class PowerComponentFeedSerializer(BaseModel):
     formed_at: datetime | None
     creator: UserSerializer
     likes_count: int
-    is_liked: int = Field(description="1 — текущий пользователь поставил лайк, иначе 0")
-    is_mine: int = Field(description="1 — компонент создан текущим пользователем, иначе 0")
+    is_liked: int = Field(
+        description="1 — текущий пользователь уже поставил лайк, иначе 0. "
+        "Нужен ленте: закрашенное или пустое сердце и какое значение like отправить в POST лайка"
+    )
+    is_mine: int = Field(
+        description="1 — компонент создан текущим пользователем, иначе 0. "
+        "Нужен ленте, чтобы показать кнопку удаления у своей карточки"
+    )
 
 
 class PowerComponentLikeSerializer(BaseModel):

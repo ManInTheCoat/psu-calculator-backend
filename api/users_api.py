@@ -3,9 +3,11 @@
     POST /api/users/register   регистрация
     POST /api/users/login      аутентификация (заглушка)
     POST /api/users/logout     деавторизация (заглушка)
+
+Ответ — сами данные без обёрток, результат передаётся HTTP-кодом.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,7 +16,7 @@ from core.current_user import CurrentUser, get_current_user
 from core.security import hash_password
 from db.session import get_db
 from models.user import User
-from schemas.common import ERROR_RESPONSES, ApiResponse
+from schemas.common import ERROR_RESPONSES
 from schemas.user import UserLoginRequest, UserRegisterRequest, UserSerializer
 
 router = APIRouter(prefix="/api/users", tags=["users"])
@@ -24,7 +26,7 @@ router = APIRouter(prefix="/api/users", tags=["users"])
     "/register",
     summary="Регистрация нового пользователя",
     status_code=status.HTTP_201_CREATED,
-    response_model=ApiResponse[UserSerializer],
+    response_model=UserSerializer,
     responses={400: ERROR_RESPONSES[400], 409: ERROR_RESPONSES[409]},
 )
 async def register_user(body: UserRegisterRequest, db: AsyncSession = Depends(get_db)):
@@ -41,14 +43,14 @@ async def register_user(body: UserRegisterRequest, db: AsyncSession = Depends(ge
         raise HTTPException(status_code=409, detail=f"Логин {body.login} уже занят")
 
     await db.refresh(user)
-    return ApiResponse(message="Пользователь зарегистрирован", data=UserSerializer.model_validate(user))
+    return UserSerializer.model_validate(user)
 
 
 @router.post(
     "/login",
-    summary="Аутентификация (заглушка: вернёт текущего пользователя-константу)",
-    response_model=ApiResponse[UserSerializer],
-    responses={400: ERROR_RESPONSES[400]},
+    summary="Аутентификация (заглушка: возвращает текущего пользователя-константу)",
+    response_model=UserSerializer,
+    responses={400: ERROR_RESPONSES[400], 404: ERROR_RESPONSES[404]},
 )
 async def login_user(
     body: UserLoginRequest,
@@ -57,16 +59,17 @@ async def login_user(
 ):
     # Заглушка
     user = await db.get(User, current_user.id)
-    return ApiResponse(
-        message="Заглушка",
-        data=UserSerializer.model_validate(user) if user else None,
-    )
+    if user is None:
+        raise HTTPException(status_code=404, detail="Текущий пользователь не найден")
+    return UserSerializer.model_validate(user)
 
 
 @router.post(
     "/logout",
     summary="Деавторизация (заглушка)",
-    response_model=ApiResponse[None],
+    status_code=status.HTTP_204_NO_CONTENT,
+    response_class=Response,
 )
 async def logout_user():
-    return ApiResponse(message="Заглушка")
+    # Заглушка
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
