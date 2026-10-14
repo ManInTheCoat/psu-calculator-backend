@@ -9,20 +9,24 @@
     POST   /api/power_components/{id}/like                              лайк: 1 — поставить, 0 — отменить
 
 Ответ — сами данные без обёрток, результат передаётся HTTP-кодом.
-Текущий пользователь во всех методах берётся из singleton get_current_user().
+
+Доступ (ЛР4): список и лента доступны гостю (get_current_user_optional, признаки
+is_mine/is_liked для гостя = 0); остальные методы — только авторизованному
+пользователю (get_current_user), без сессии ответ 401. Создатель новой записи
+берётся из сессии.
 """
 
 import logging
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Path, Query, UploadFile, status
-from sqlalchemy import delete, exists, func, select
+from sqlalchemy import delete, exists, false, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from starlette.concurrency import run_in_threadpool
 
-from core.current_user import CurrentUser, get_current_user
+from core.current_user import CurrentUser, get_current_user, get_current_user_optional
 from db.session import get_db
 from models.power_component import PowerComponent
 from models.power_component_like import PowerComponentLike
@@ -110,12 +114,16 @@ async def _read_upload(upload: UploadFile | None, kind: str) -> tuple[bytes, str
     return data, content_type, extension
 
 
-async def _get_feed_item(db: AsyncSession, power_component_id: int, user: CurrentUser) -> PowerComponentFeedSerializer:
+async def _get_feed_item(
+    db: AsyncSession, power_component_id: int, user: CurrentUser | None
+) -> PowerComponentFeedSerializer:
+    # Гость лайков не ставит: для него is_liked всегда 0
+    is_liked_expr = _is_liked_expr(user.id) if user is not None else false()
     stmt = (
         select(
             PowerComponent,
             _likes_count_expr().label("likes_count"),
-            _is_liked_expr(user.id).label("is_liked"),
+            is_liked_expr.label("is_liked"),
         )
         .options(selectinload(PowerComponent.creator))
         .where(PowerComponent.id == power_component_id, PowerComponent.status == "published")
@@ -137,7 +145,7 @@ async def _get_feed_item(db: AsyncSession, power_component_id: int, user: Curren
         creator=component.creator,
         likes_count=likes_count,
         is_liked=int(is_liked),
-        is_mine=int(component.creator_id == user.id),
+        is_mine=int(user is not None and component.creator_id == user.id),
     )
 
 
@@ -162,7 +170,7 @@ async def _first_published_id(db: AsyncSession, after_id: int = 0) -> int | None
 async def get_power_components(
     max_power: int | None = Query(default=None, ge=POWER_MIN, le=POWER_MAX, description="Мощность до, Вт"),
     db: AsyncSession = Depends(get_db),
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser | None = Depends(get_current_user_optional),
 ):
     stmt = (
         select(PowerComponent, _likes_count_expr().label("likes_count"))
@@ -181,7 +189,7 @@ async def get_power_components(
             power_watt=component.power_watt,
             weight_gram=component.weight_gram,
             likes_count=likes_count,
-            is_mine=int(component.creator_id == user.id),
+            is_mine=int(user is not None and component.creator_id == user.id),
         )
         for component, likes_count in rows
     ]
@@ -199,7 +207,7 @@ async def get_power_component_feed(
     ),
     is_next: bool = Query(default=False, alias="next", description="true — следующий опубликованный после ID"),
     db: AsyncSession = Depends(get_db),
-    user: CurrentUser = Depends(get_current_user),
+    user: CurrentUser | None = Depends(get_current_user_optional),
 ):
     if power_component_id is None:
         target_id = await _first_published_id(db)
@@ -218,7 +226,7 @@ async def get_power_component_feed(
     "/draft",
     summary="Черновик текущего пользователя",
     response_model=PowerComponentSerializer,
-    responses={404: ERROR_RESPONSES[404]},
+    responses={k: ERROR_RESPONSES[k] for k in (401, 404)},
 )
 async def get_power_component_draft(
     db: AsyncSession = Depends(get_db),
@@ -239,7 +247,7 @@ async def get_power_component_draft(
     summary="Добавление черновика с фото и видео",
     status_code=status.HTTP_201_CREATED,
     response_model=PowerComponentSerializer,
-    responses={400: ERROR_RESPONSES[400], 409: ERROR_RESPONSES[409], 500: ERROR_RESPONSES[500]},
+    responses={k: ERROR_RESPONSES[k] for k in (400, 401, 409, 500)},
 )
 async def create_power_component(
     title: str = Form(min_length=1, max_length=100, description="Название компонента"),
@@ -313,7 +321,7 @@ async def create_power_component(
     "/{power_component_id}/publish",
     summary="Публикация черновика: draft -> published",
     response_model=PowerComponentSerializer,
-    responses={k: ERROR_RESPONSES[k] for k in (400, 403, 404, 409)},
+    responses={k: ERROR_RESPONSES[k] for k in (400, 401, 403, 404, 409)},
 )
 async def publish_power_component(
     power_component_id: PowerComponentId,
@@ -343,7 +351,7 @@ async def publish_power_component(
     "/{power_component_id}",
     summary="Логическое удаление своего компонента (статус deleted)",
     response_model=PowerComponentDeletedSerializer,
-    responses={k: ERROR_RESPONSES[k] for k in (400, 403, 404)},
+    responses={k: ERROR_RESPONSES[k] for k in (400, 401, 403, 404)},
 )
 async def delete_power_component(
     power_component_id: PowerComponentId,
@@ -365,7 +373,7 @@ async def delete_power_component(
     "/{power_component_id}/like",
     summary="Лайк от текущего пользователя: like=1 ставит, like=0 отменяет",
     response_model=PowerComponentLikeSerializer,
-    responses={k: ERROR_RESPONSES[k] for k in (400, 404)},
+    responses={k: ERROR_RESPONSES[k] for k in (400, 401, 404)},
 )
 async def like_power_component(
     power_component_id: PowerComponentId,

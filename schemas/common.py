@@ -14,6 +14,7 @@ class ErrorDetail(BaseModel):
 
 ERROR_RESPONSES = {
     400: {"model": ErrorDetail, "description": "Некорректный запрос"},
+    401: {"model": ErrorDetail, "description": "Требуется авторизация"},
     403: {"model": ErrorDetail, "description": "Нет прав на действие"},
     404: {"model": ErrorDetail, "description": "Не найдено"},
     409: {"model": ErrorDetail, "description": "Конфликт с текущим состоянием"},

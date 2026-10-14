@@ -18,6 +18,7 @@ from api.errors import register_error_handlers
 from api.handlers import router as pages_router
 from api.power_components_api import router as power_components_router
 from api.users_api import router as users_router
+from core.sessions import redis_client
 from services.minio_storage import storage
 
 logger = logging.getLogger(__name__)
@@ -30,6 +31,7 @@ async def lifespan(app: FastAPI):
     except Exception as exc:
         logger.warning("MinIO недоступен: %s", exc)
     yield
+    await redis_client.aclose()
 
 
 app = FastAPI(title="PC Power Calc", lifespan=lifespan)
