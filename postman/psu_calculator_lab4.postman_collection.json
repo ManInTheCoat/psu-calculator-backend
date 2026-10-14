@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "eaa338fd-14f7-469f-8cb9-26596420f87f",
 		"name": "PC Power Calc — ЛР4 API",
-		"description": "Веб-сервис расчёта мощности блока питания (тема 18). 10 запросов — по одному на каждый метод.\n\nАвторизация (ЛР4): сессия хранится в Redis, браузер получает куку session_id. Методы создателя отправляют заголовок Cookie: session_id={{sessionId}}.\n\nПеред запуском: войти через Swagger (POST /api/users/login), в браузере F12 → Application → Cookies скопировать значение session_id и вставить в переменную коллекции sessionId (вкладка Variables, Save).\n\nГость: снять галочку у заголовка Cookie — методы создателя отвечают 401, список и лента работают.\n\nУ всех запросов отключено хранилище кук Postman (Settings → Disable cookie jar), поэтому авторизация определяется только заголовком Cookie.",
+		"description": "Веб-сервис расчёта мощности блока питания (тема 18). 10 запросов — по одному на каждый метод.\n\nАвторизация (ЛР4): сессия хранится в Redis, браузер получает куку session_id. Методы создателя отправляют заголовок Cookie: session_id={{sessionId}}.\n\nПеред запуском: войти через Swagger (POST /api/users/login), в браузере F12 → Application → Cookies скопировать значение session_id и вставить в переменную коллекции sessionId (вкладка Variables, Save).\n\nГость: снять галочку у заголовка Cookie — методы создателя отвечают 401, список и лента работают.\n\nУ всех запросов отключено хранилище кук Postman (Settings → Disable cookie jar), поэтому авторизация определяется только заголовком Cookie. В Runner: включить «Run collection without using stored cookies», выключить «Save cookies after collection run».\n\nЗапросы 08–10 регистрируют нового пользователя, входят и выходят им (переменная newSessionId), сессию из Swagger не трогают.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
@@ -65,16 +65,12 @@
 					"script": {
 						"type": "text/javascript",
 						"exec": [
-							"if (pm.response.code === 401) {",
-							"  pm.test(\"Гость: 401 Требуется авторизация\", () => pm.expect(pm.response.json().detail).to.eql(\"Требуется авторизация\"));",
-							"} else {",
-							"  pm.test(\"Статус 201\", () => pm.response.to.have.status(201));",
-							"  const d = pm.response.json();",
-							"  pm.collectionVariables.set(\"componentId\", d.id);",
-							"  pm.test(\"Статус draft\", () => pm.expect(d.status).to.eql(\"draft\"));",
-							"  pm.test(\"Фото в MinIO\", () => pm.expect(d.image_url).to.include(\"/power-components/power_component_\"));",
-							"  pm.test(\"Видео в MinIO\", () => pm.expect(d.video_url).to.include(\"/power-components/power_component_\"));",
-							"}"
+							"pm.test(\"Статус 201\", () => pm.response.to.have.status(201));",
+							"const d = pm.response.json();",
+							"if (d.id) pm.collectionVariables.set(\"componentId\", d.id);",
+							"pm.test(\"Статус draft\", () => pm.expect(d.status).to.eql(\"draft\"));",
+							"pm.test(\"Фото в MinIO\", () => pm.expect(d.image_url).to.include(\"/power-components/power_component_\"));",
+							"pm.test(\"Видео в MinIO\", () => pm.expect(d.video_url).to.include(\"/power-components/power_component_\"));"
 						]
 					}
 				}
@@ -133,13 +129,9 @@
 					"script": {
 						"type": "text/javascript",
 						"exec": [
-							"if (pm.response.code === 401) {",
-							"  pm.test(\"Гость: 401 Требуется авторизация\", () => pm.expect(pm.response.json().detail).to.eql(\"Требуется авторизация\"));",
-							"} else {",
-							"  pm.test(\"Статус 200\", () => pm.response.to.have.status(200));",
-							"  pm.test(\"Тот же черновик\", () => pm.expect(pm.response.json().id).to.eql(Number(pm.collectionVariables.get(\"componentId\"))));",
-							"  pm.test(\"Статус draft\", () => pm.expect(pm.response.json().status).to.eql(\"draft\"));",
-							"}"
+							"pm.test(\"Статус 200\", () => pm.response.to.have.status(200));",
+							"pm.test(\"Тот же черновик\", () => pm.expect(pm.response.json().id).to.eql(Number(pm.collectionVariables.get(\"componentId\"))));",
+							"pm.test(\"Статус draft\", () => pm.expect(pm.response.json().status).to.eql(\"draft\"));"
 						]
 					}
 				}
@@ -299,12 +291,8 @@
 					"script": {
 						"type": "text/javascript",
 						"exec": [
-							"if (pm.response.code === 401) {",
-							"  pm.test(\"Гость: 401 Требуется авторизация\", () => pm.expect(pm.response.json().detail).to.eql(\"Требуется авторизация\"));",
-							"} else {",
-							"  pm.test(\"Статус 200\", () => pm.response.to.have.status(200));",
-							"  pm.test(\"Лайк стоит\", () => pm.expect(pm.response.json().is_liked).to.eql(1));",
-							"}"
+							"pm.test(\"Статус 200\", () => pm.response.to.have.status(200));",
+							"pm.test(\"Лайк стоит\", () => pm.expect(pm.response.json().is_liked).to.eql(1));"
 						]
 					}
 				}
@@ -358,12 +346,8 @@
 					"script": {
 						"type": "text/javascript",
 						"exec": [
-							"if (pm.response.code === 401) {",
-							"  pm.test(\"Гость: 401 Требуется авторизация\", () => pm.expect(pm.response.json().detail).to.eql(\"Требуется авторизация\"));",
-							"} else {",
-							"  pm.test(\"Статус 200\", () => pm.response.to.have.status(200));",
-							"  pm.test(\"Статус deleted\", () => pm.expect(pm.response.json().status).to.eql(\"deleted\"));",
-							"}"
+							"pm.test(\"Статус 200\", () => pm.response.to.have.status(200));",
+							"pm.test(\"Статус deleted\", () => pm.expect(pm.response.json().status).to.eql(\"deleted\"));"
 						]
 					}
 				}
@@ -414,9 +398,8 @@
 					"script": {
 						"type": "text/javascript",
 						"exec": [
-							"if (!pm.collectionVariables.get(\"registerLogin\") || pm.collectionVariables.get(\"registerLogin\") === \"new_builder\") {",
-							"  pm.collectionVariables.set(\"registerLogin\", \"builder_\" + Date.now().toString().slice(-6));",
-							"}"
+							"// Каждый запуск — новый логин, иначе повторная регистрация получит 409",
+							"pm.collectionVariables.set(\"registerLogin\", \"builder_\" + Date.now().toString().slice(-6));"
 						]
 					}
 				}
@@ -469,7 +452,7 @@
 							"pm.test(\"Выдана кука session_id\", () => pm.expect(setCookie).to.include(\"session_id=\"));",
 							"pm.test(\"Кука HttpOnly\", () => pm.expect(setCookie.toLowerCase()).to.include(\"httponly\"));",
 							"const m = setCookie.match(/session_id=([^;]+)/);",
-							"if (m) pm.collectionVariables.set(\"sessionId\", m[1]);"
+							"if (m) pm.collectionVariables.set(\"newSessionId\", m[1]);"
 						]
 					}
 				}
@@ -493,7 +476,7 @@
 						"login"
 					]
 				},
-				"description": "Проверяет логин и пароль (хеш PBKDF2), создаёт в Redis ключ session:<id> → {user_id, login} со сроком жизни сутки и возвращает куку session_id (HttpOnly). Неверные данные — 401. Значение куки сохраняется в переменную sessionId. Здесь входит пользователь, зарегистрированный запросом 08.",
+				"description": "Проверяет логин и пароль (хеш PBKDF2), создаёт в Redis ключ session:<id> → {user_id, login} со сроком жизни сутки и возвращает куку session_id (HttpOnly). Неверные данные — 401. Входит пользователь, зарегистрированный запросом 08; значение его куки сохраняется в переменную newSessionId (sessionId из Swagger не меняется).",
 				"body": {
 					"mode": "raw",
 					"raw": "{\n  \"login\": \"{{registerLogin}}\",\n  \"password\": \"builder123\"\n}",
@@ -516,11 +499,7 @@
 					"script": {
 						"type": "text/javascript",
 						"exec": [
-							"if (pm.response.code === 401) {",
-							"  pm.test(\"Гость: 401 Требуется авторизация\", () => pm.expect(pm.response.json().detail).to.eql(\"Требуется авторизация\"));",
-							"} else {",
-							"  pm.test(\"Статус 204\", () => pm.response.to.have.status(204));",
-							"}"
+							"pm.test(\"Статус 204\", () => pm.response.to.have.status(204));"
 						]
 					}
 				}
@@ -530,9 +509,9 @@
 				"header": [
 					{
 						"key": "Cookie",
-						"value": "session_id={{sessionId}}",
+						"value": "session_id={{newSessionId}}",
 						"type": "text",
-						"description": "Кука сессии. Снять галочку — запрос от гостя"
+						"description": "Кука сессии из запроса 09. Снять галочку — запрос от гостя (401)"
 					}
 				],
 				"url": {
@@ -546,7 +525,7 @@
 						"logout"
 					]
 				},
-				"description": "Удаляет сессию из Redis и куку. Без куки — 401. После выхода с этим sessionId методы создателя отвечают 401."
+				"description": "Удаляет сессию из Redis и куку. Без куки — 401. Завершает сессию пользователя, вошедшего запросом 09 (переменная newSessionId), поэтому сессия из Swagger (sessionId) остаётся рабочей и коллекцию можно прогонять повторно."
 			},
 			"protocolProfileBehavior": {
 				"disableCookies": true
@@ -562,6 +541,11 @@
 			"key": "sessionId",
 			"value": "",
 			"description": "Значение куки session_id из браузера (F12 → Application → Cookies)"
+		},
+		{
+			"key": "newSessionId",
+			"value": "",
+			"description": "Сессия пользователя из запроса 08, выданная запросом 09; её завершает запрос 10"
 		},
 		{
 			"key": "componentId",

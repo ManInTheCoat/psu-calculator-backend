@@ -43,7 +43,7 @@ docker exec -it pc_power_redis redis-cli TTL session:<uuid>
 
 ### Проверка в Postman (ЛР4)
 
-Импортировать `postman/psu_calculator_lab4.postman_collection.json`. Войти через Swagger (`POST /api/users/login`), в браузере F12 → Application → Cookies → `http://127.0.0.1:8000` скопировать значение `session_id` и вставить в переменную коллекции `sessionId` (вкладка Variables, затем Save). Методы создателя отправляют заголовок `Cookie: session_id={{sessionId}}`: со снятой галочкой у этого заголовка запрос идёт от гостя и получает `401`. У всех запросов отключено хранилище кук Postman (Settings → Disable cookie jar), поэтому авторизация определяется только этим заголовком. В запросе 01 заголовок `Cookie` по умолчанию выключен: список доступен гостю.
+Импортировать `postman/psu_calculator_lab4.postman_collection.json`. Войти через Swagger (`POST /api/users/login`), в браузере F12 → Application → Cookies → `http://127.0.0.1:8000` скопировать значение `session_id` и вставить в переменную коллекции `sessionId` (вкладка Variables, затем Save). Методы создателя отправляют заголовок `Cookie: session_id={{sessionId}}`: со снятой галочкой у этого заголовка запрос идёт от гостя и получает `401`. У всех запросов отключено хранилище кук Postman (Settings → Disable cookie jar), поэтому авторизация определяется только этим заголовком. В запросе 01 заголовок `Cookie` по умолчанию выключен: список доступен гостю. Запросы 08–10 регистрируют нового пользователя, входят и выходят им (переменная `newSessionId`), сессию из Swagger не трогают, поэтому коллекцию можно прогонять повторно. В Runner включить «Run collection without using stored cookies» и выключить «Save cookies after collection run».
 
 ## Лабораторная 3 — веб-сервис
 
