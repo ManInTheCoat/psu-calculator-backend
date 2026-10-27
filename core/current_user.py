@@ -45,7 +45,7 @@ async def get_current_user_optional(request: Request) -> CurrentUser | None:
 
 
 async def get_current_user(session_id: str | None = Depends(session_cookie)) -> CurrentUser:
-    """Авторизованный пользователь; без действующей сессии — 401."""
+    """Авторизованный пользователь; без действующей сессии - 401."""
     user = await _user_by_session(session_id)
     if user is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Требуется авторизация")
