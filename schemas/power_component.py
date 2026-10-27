@@ -23,7 +23,7 @@ class PowerComponentListItemSerializer(BaseModel):
     weight_gram: int | None
     likes_count: int
     is_mine: int = Field(
-        description="1 — компонент создан текущим пользователем, иначе 0. "
+        description="1 - компонент создан текущим пользователем, иначе 0. "
         "Нужен плитке: кнопка «Удалить» показывается только у своих карточек"
     )
 
@@ -62,11 +62,11 @@ class PowerComponentFeedSerializer(BaseModel):
     creator: UserSerializer
     likes_count: int
     is_liked: int = Field(
-        description="1 — текущий пользователь уже поставил лайк, иначе 0. "
+        description="1 - текущий пользователь уже поставил лайк, иначе 0. "
         "Нужен ленте: закрашенное или пустое сердце и какое значение like отправить в POST лайка"
     )
     is_mine: int = Field(
-        description="1 — компонент создан текущим пользователем, иначе 0. "
+        description="1 - компонент создан текущим пользователем, иначе 0. "
         "Нужен ленте, чтобы показать кнопку удаления у своей карточки"
     )
 
@@ -95,7 +95,7 @@ class PowerComponentPublishRequest(BaseModel):
 
 
 class PowerComponentLikeRequest(BaseModel):
-    """Тело POST лайка: 1 — поставить лайк, 0 — отменить."""
+    """Тело POST лайка: 1 - поставить лайк, 0 - отменить."""
 
     model_config = ConfigDict(extra="forbid")
 

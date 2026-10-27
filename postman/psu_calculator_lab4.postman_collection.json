@@ -13,7 +13,7 @@
 				"header": [
 					{
 						"key": "Cookie",
-						"value": "session_id=93acddd1-215b-4263-8db6-32bba6831985",
+						"value": "session_id=8b1a9854-56ee-4b51-9e3a-527f341d554d",
 						"type": "text"
 					}
 				],
@@ -64,7 +64,7 @@
 				"header": [
 					{
 						"key": "Cookie",
-						"value": "session_id=93acddd1-215b-4263-8db6-32bba6831985",
+						"value": "session_id=8b1a9854-56ee-4b51-9e3a-527f341d554d",
 						"type": "text"
 					}
 				],
@@ -127,7 +127,7 @@
 				"header": [
 					{
 						"key": "Cookie",
-						"value": "session_id=93acddd1-215b-4263-8db6-32bba6831985",
+						"value": "session_id=8b1a9854-56ee-4b51-9e3a-527f341d554d",
 						"type": "text"
 					}
 				],
@@ -176,7 +176,7 @@
 					},
 					{
 						"key": "Cookie",
-						"value": "session_id=93acddd1-215b-4263-8db6-32bba6831985",
+						"value": "session_id=8b1a9854-56ee-4b51-9e3a-527f341d554d",
 						"type": "text"
 					}
 				],
@@ -234,7 +234,7 @@
 				"header": [
 					{
 						"key": "Cookie",
-						"value": "session_id=93acddd1-215b-4263-8db6-32bba6831985",
+						"value": "session_id=8b1a9854-56ee-4b51-9e3a-527f341d554d",
 						"type": "text"
 					}
 				],
@@ -293,7 +293,7 @@
 					},
 					{
 						"key": "Cookie",
-						"value": "session_id=93acddd1-215b-4263-8db6-32bba6831985",
+						"value": "session_id=8b1a9854-56ee-4b51-9e3a-527f341d554d",
 						"type": "text"
 					}
 				],
@@ -347,7 +347,7 @@
 				"header": [
 					{
 						"key": "Cookie",
-						"value": "session_id=93acddd1-215b-4263-8db6-32bba6831985",
+						"value": "session_id=8b1a9854-56ee-4b51-9e3a-527f341d554d",
 						"type": "text"
 					}
 				],
@@ -413,7 +413,7 @@
 				},
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"login\": \"builder_petr\",\n  \"password\": \"builder123\"\n}",
+					"raw": "{\n  \"login\": \"builder_lr4\",\n  \"password\": \"builder123\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -465,7 +465,7 @@
 				},
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"login\": \"builder_petr\",\n  \"password\": \"builder123\"\n}",
+					"raw": "{\n  \"login\": \"builder_lr4\",\n  \"password\": \"builder123\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
