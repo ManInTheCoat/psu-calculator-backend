@@ -45,7 +45,7 @@ def detect_video(header: bytes) -> tuple[str, str] | None:
 
 
 def generate_object_name(power_component_id: int, kind: str, extension: str) -> str:
-    """Латинское имя файла в бакете, kind — image или video."""
+    """Латинское имя файла в бакете, kind - image или video."""
     return f"power_component_{power_component_id}_{kind}_{uuid.uuid4().hex[:8]}{extension}"
 
 
