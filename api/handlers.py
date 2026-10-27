@@ -1,13 +1,13 @@
 """Обработчики запросов приложения.
 
 Шесть HTTP-методов:
-    GET  /power_components                    — плитка с фильтрацией по мощности
-    GET  /power_components/feed                — лента, первая опубликованная карточка
-    GET  /power_components/feed/{id}           — лента, карточка компонента (?next=true — следующая)
-    GET  /power_components/draft                — страница добавления, черновик текущего пользователя
-    POST /power_components/draft                — создание черновика
-    POST /power_components/{id}/publish         — публикация черновика
-    POST /power_components/{id}/delete          — логическое удаление через SQL UPDATE
+    GET  /power_components                    - плитка с фильтрацией по мощности
+    GET  /power_components/feed                - лента, первая опубликованная карточка
+    GET  /power_components/feed/{id}           - лента, карточка компонента (?next=true - следующая)
+    GET  /power_components/draft                - страница добавления, черновик текущего пользователя
+    POST /power_components/draft                - создание черновика
+    POST /power_components/{id}/publish         - публикация черновика
+    POST /power_components/{id}/delete          - логическое удаление через SQL UPDATE
 """
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Query, Request

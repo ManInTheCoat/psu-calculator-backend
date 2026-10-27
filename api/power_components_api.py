@@ -6,12 +6,12 @@
     POST   /api/power_components                                        добавление черновика + фото и видео в MinIO
     PUT    /api/power_components/{id}/publish                           публикация черновика (draft -> published)
     DELETE /api/power_components/{id}                                   логическое удаление (-> deleted)
-    POST   /api/power_components/{id}/like                              лайк: 1 — поставить, 0 — отменить
+    POST   /api/power_components/{id}/like                              лайк: 1 - поставить, 0 - отменить
 
-Ответ — сами данные без обёрток, результат передаётся HTTP-кодом.
+Ответ - сами данные без обёрток, результат передаётся HTTP-кодом.
 
 Доступ (ЛР4): список и лента доступны гостю (get_current_user_optional, признаки
-is_mine/is_liked для гостя = 0); остальные методы — только авторизованному
+is_mine/is_liked для гостя = 0); остальные методы - только авторизованному
 пользователю (get_current_user), без сессии ответ 401. Создатель новой записи
 берётся из сессии.
 """
@@ -197,7 +197,7 @@ async def get_power_components(
 
 @router.get(
     "/feed",
-    summary="Лента: без ид — первый опубликованный, с ид — этот компонент, с ид и next=true — следующий",
+    summary="Лента: без ид - первый опубликованный, с ид - этот компонент, с ид и next=true - следующий",
     response_model=PowerComponentFeedSerializer,
     responses={400: ERROR_RESPONSES[400], 404: ERROR_RESPONSES[404]},
 )
@@ -205,7 +205,7 @@ async def get_power_component_feed(
     power_component_id: int | None = Query(
         default=None, ge=1, le=INT32_MAX, description="ID компонента; для панели вкладок не указывается"
     ),
-    is_next: bool = Query(default=False, alias="next", description="true — следующий опубликованный после ID"),
+    is_next: bool = Query(default=False, alias="next", description="true - следующий опубликованный после ID"),
     db: AsyncSession = Depends(get_db),
     user: CurrentUser | None = Depends(get_current_user_optional),
 ):

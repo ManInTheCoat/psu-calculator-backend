@@ -4,7 +4,7 @@
     POST /api/users/login      аутентификация: создаёт сессию в Redis и ставит куку session_id
     POST /api/users/logout     деавторизация: удаляет сессию из Redis и куку
 
-Ответ — сами данные без обёрток, результат передаётся HTTP-кодом.
+Ответ - сами данные без обёрток, результат передаётся HTTP-кодом.
 """
 
 from fastapi import APIRouter, Depends, HTTPException, Response, status
