@@ -1,45 +1,32 @@
 {
 	"info": {
 		"_postman_id": "eaa338fd-14f7-469f-8cb9-26596420f87f",
-		"name": "PC Power Calc — ЛР4 API",
-		"description": "Веб-сервис расчёта мощности блока питания (тема 18). 10 запросов — по одному на каждый метод.\n\nАвторизация (ЛР4): сессия хранится в Redis, браузер получает куку session_id. Методы создателя отправляют заголовок Cookie: session_id={{sessionId}}.\n\nПеред запуском: войти через Swagger (POST /api/users/login), в браузере F12 → Application → Cookies скопировать значение session_id и вставить в переменную коллекции sessionId (вкладка Variables, Save).\n\nГость: снять галочку у заголовка Cookie — методы создателя отвечают 401, список и лента работают.\n\nУ всех запросов отключено хранилище кук Postman (Settings → Disable cookie jar), поэтому авторизация определяется только заголовком Cookie. В Runner: включить «Run collection without using stored cookies», выключить «Save cookies after collection run».\n\nЗапросы 08–10 регистрируют нового пользователя, входят и выходят им (переменная newSessionId), сессию из Swagger не трогают.",
+		"name": "PC Power Calc ЛР4",
+		"description": "Веб-сервис расчета мощности блока питания (тема 18).\n\nАдреса и кука сессии указаны в запросах явно, переменные не используются.\nЗначение куки session_id берется в браузере после входа через Swagger (F12, Application, Cookies) и вставляется в заголовок Cookie каждого запроса.\nЕсли снять галочку у заголовка Cookie, запрос выполняется от гостя.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
 		{
-			"name": "01 GET Список компонентов (гость или авторизованный)",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"type": "text/javascript",
-						"exec": [
-							"pm.test(\"Статус 200\", () => pm.response.to.have.status(200));",
-							"pm.test(\"Ответ в JSON\", () => pm.response.to.be.json);",
-							"const list = pm.response.json();",
-							"pm.test(\"Ответ — массив без обёрток\", () => pm.expect(list).to.be.an(\"array\"));",
-							"pm.test(\"Все мощности <= 300\", () => list.forEach(c => pm.expect(c.power_watt).to.be.at.most(300)));",
-							"pm.test(\"Признак is_mine 0/1\", () => list.forEach(c => pm.expect([0, 1]).to.include(c.is_mine)));"
-						]
-					}
-				}
-			],
+			"name": "01 GET Список компонентов",
 			"request": {
 				"method": "GET",
 				"header": [
 					{
 						"key": "Cookie",
-						"value": "session_id={{sessionId}}",
-						"type": "text",
-						"description": "Включить галочку — is_mine считается для вашего пользователя; без неё — гость, is_mine = 0",
-						"disabled": true
+						"value": "session_id=93acddd1-215b-4263-8db6-32bba6831985",
+						"type": "text"
 					}
 				],
 				"url": {
-					"raw": "{{baseUrl}}/api/power_components?max_power=300",
+					"raw": "http://127.0.0.1:8000/api/power_components?max_power=300",
+					"protocol": "http",
 					"host": [
-						"{{baseUrl}}"
+						"127",
+						"0",
+						"0",
+						"1"
 					],
+					"port": "8000",
 					"path": [
 						"api",
 						"power_components"
@@ -50,52 +37,52 @@
 							"value": "300"
 						}
 					]
-				},
-				"description": "Доступен без авторизации. Только опубликованные, max_power — мощность до, Вт (0–500). С выключенным заголовком Cookie — гость (is_mine у всех 0), с включённым — is_mine = 1 у своих компонентов. По is_mine плитка показывает кнопку «Удалить» только у своих карточек."
+				}
 			},
 			"protocolProfileBehavior": {
 				"disableCookies": true
-			}
-		},
-		{
-			"name": "02 POST Добавление компонента с фото и видео",
+			},
 			"event": [
 				{
 					"listen": "test",
 					"script": {
 						"type": "text/javascript",
 						"exec": [
-							"pm.test(\"Статус 201\", () => pm.response.to.have.status(201));",
-							"const d = pm.response.json();",
-							"if (d.id) pm.collectionVariables.set(\"componentId\", d.id);",
-							"pm.test(\"Статус draft\", () => pm.expect(d.status).to.eql(\"draft\"));",
-							"pm.test(\"Фото в MinIO\", () => pm.expect(d.image_url).to.include(\"/power-components/power_component_\"));",
-							"pm.test(\"Видео в MinIO\", () => pm.expect(d.video_url).to.include(\"/power-components/power_component_\"));"
+							"pm.test(\"Статус 200\", () => pm.response.to.have.status(200));",
+							"const list = pm.response.json();",
+							"pm.test(\"Массив компонентов\", () => pm.expect(list).to.be.an(\"array\"));",
+							"pm.test(\"Мощность не больше 300\", () => list.forEach(c => pm.expect(c.power_watt).to.be.at.most(300)));"
 						]
 					}
 				}
-			],
+			]
+		},
+		{
+			"name": "02 POST Добавление компонента с фото и видео",
 			"request": {
 				"method": "POST",
 				"header": [
 					{
 						"key": "Cookie",
-						"value": "session_id={{sessionId}}",
-						"type": "text",
-						"description": "Кука сессии. Снять галочку — запрос от гостя"
+						"value": "session_id=93acddd1-215b-4263-8db6-32bba6831985",
+						"type": "text"
 					}
 				],
 				"url": {
-					"raw": "{{baseUrl}}/api/power_components",
+					"raw": "http://127.0.0.1:8000/api/power_components",
+					"protocol": "http",
 					"host": [
-						"{{baseUrl}}"
+						"127",
+						"0",
+						"0",
+						"1"
 					],
+					"port": "8000",
 					"path": [
 						"api",
 						"power_components"
 					]
 				},
-				"description": "Только авторизованный (без куки — 401). Создатель черновика берётся из сессии, с клиента не передаётся. multipart/form-data: title, image (PNG/JPEG/GIF/WEBP до 5 МБ), video (MP4/MOV/WEBM до 50 МБ). Id черновика сохраняется в переменную componentId.",
 				"body": {
 					"mode": "formdata",
 					"formdata": [
@@ -119,10 +106,51 @@
 			},
 			"protocolProfileBehavior": {
 				"disableCookies": true
-			}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Статус 201\", () => pm.response.to.have.status(201));",
+							"pm.test(\"Статус draft\", () => pm.expect(pm.response.json().status).to.eql(\"draft\"));"
+						]
+					}
+				}
+			]
 		},
 		{
-			"name": "03 GET Черновик текущего пользователя",
+			"name": "03 GET Черновик",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Cookie",
+						"value": "session_id=93acddd1-215b-4263-8db6-32bba6831985",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/power_components/draft",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"power_components",
+						"draft"
+					]
+				}
+			},
+			"protocolProfileBehavior": {
+				"disableCookies": true
+			},
 			"event": [
 				{
 					"listen": "test",
@@ -130,86 +158,45 @@
 						"type": "text/javascript",
 						"exec": [
 							"pm.test(\"Статус 200\", () => pm.response.to.have.status(200));",
-							"pm.test(\"Тот же черновик\", () => pm.expect(pm.response.json().id).to.eql(Number(pm.collectionVariables.get(\"componentId\"))));",
 							"pm.test(\"Статус draft\", () => pm.expect(pm.response.json().status).to.eql(\"draft\"));"
 						]
 					}
 				}
-			],
-			"request": {
-				"method": "GET",
-				"header": [
-					{
-						"key": "Cookie",
-						"value": "session_id={{sessionId}}",
-						"type": "text",
-						"description": "Кука сессии. Снять галочку — запрос от гостя"
-					}
-				],
-				"url": {
-					"raw": "{{baseUrl}}/api/power_components/draft",
-					"host": [
-						"{{baseUrl}}"
-					],
-					"path": [
-						"api",
-						"power_components",
-						"draft"
-					]
-				},
-				"description": "Только авторизованный (без куки — 401). Ид не указывается: черновик ищется по пользователю из сессии."
-			},
-			"protocolProfileBehavior": {
-				"disableCookies": true
-			}
+			]
 		},
 		{
-			"name": "04 PUT Публикация черновика (гость — 401)",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"type": "text/javascript",
-						"exec": [
-							"if (pm.response.code === 401) {",
-							"  pm.test(\"Гость: 401 Требуется авторизация\", () => pm.expect(pm.response.json().detail).to.eql(\"Требуется авторизация\"));",
-							"} else {",
-							"  pm.test(\"Статус 200\", () => pm.response.to.have.status(200));",
-							"  const d = pm.response.json();",
-							"  pm.test(\"Статус published\", () => pm.expect(d.status).to.eql(\"published\"));",
-							"  pm.test(\"Заполнена дата формирования\", () => pm.expect(d.formed_at).to.not.be.null);",
-							"}"
-						]
-					}
-				}
-			],
+			"name": "04 PUT Публикация черновика",
 			"request": {
 				"method": "PUT",
 				"header": [
 					{
 						"key": "Content-Type",
-						"value": "application/json"
+						"value": "application/json",
+						"type": "text"
 					},
 					{
 						"key": "Cookie",
-						"value": "session_id={{sessionId}}",
-						"type": "text",
-						"description": "Кука сессии. Снять галочку — запрос от гостя"
+						"value": "session_id=93acddd1-215b-4263-8db6-32bba6831985",
+						"type": "text"
 					}
 				],
 				"url": {
-					"raw": "{{baseUrl}}/api/power_components/{{componentId}}/publish",
+					"raw": "http://127.0.0.1:8000/api/power_components/25/publish",
+					"protocol": "http",
 					"host": [
-						"{{baseUrl}}"
+						"127",
+						"0",
+						"0",
+						"1"
 					],
+					"port": "8000",
 					"path": [
 						"api",
 						"power_components",
-						"{{componentId}}",
+						"25",
 						"publish"
 					]
 				},
-				"description": "Только авторизованный. Галочка у Cookie снята — гость, ответ 401 «Требуется авторизация». Галочка стоит — статус draft → published, formed_at = now(), обновлены description, power_watt, weight_gram. Чужой компонент — 403.",
 				"body": {
 					"mode": "raw",
 					"raw": "{\n  \"description\": \"Блок питания 750 Вт с сертификатом 80 PLUS Gold\",\n  \"power_watt\": 15,\n  \"weight_gram\": 1600\n}",
@@ -222,41 +209,45 @@
 			},
 			"protocolProfileBehavior": {
 				"disableCookies": true
-			}
-		},
-		{
-			"name": "05 GET Лента (без ид / по ид ?next=true)",
+			},
 			"event": [
 				{
 					"listen": "test",
 					"script": {
 						"type": "text/javascript",
 						"exec": [
-							"pm.test(\"Статус 200\", () => pm.response.to.have.status(200));",
-							"pm.test(\"Ответ в JSON\", () => pm.response.to.be.json);",
-							"const d = pm.response.json();",
-							"pm.test(\"Признак лайка is_liked 0/1\", () => pm.expect([0, 1]).to.include(d.is_liked));",
-							"pm.test(\"Признак is_mine 0/1\", () => pm.expect([0, 1]).to.include(d.is_mine));",
-							"pm.test(\"Вложенный creator\", () => pm.expect(d.creator).to.have.property(\"login\"));"
+							"if (pm.response.code === 401) {",
+							"    pm.test(\"Гость: 401\", () => pm.response.to.have.status(401));",
+							"} else {",
+							"    pm.test(\"Статус 200\", () => pm.response.to.have.status(200));",
+							"    pm.test(\"Статус published\", () => pm.expect(pm.response.json().status).to.eql(\"published\"));",
+							"}"
 						]
 					}
 				}
-			],
+			]
+		},
+		{
+			"name": "05 GET Лента (без ид / по ид next=true)",
 			"request": {
 				"method": "GET",
 				"header": [
 					{
 						"key": "Cookie",
-						"value": "session_id={{sessionId}}",
-						"type": "text",
-						"description": "Снять галочку — лента для гостя (is_liked и is_mine = 0)"
+						"value": "session_id=93acddd1-215b-4263-8db6-32bba6831985",
+						"type": "text"
 					}
 				],
 				"url": {
-					"raw": "{{baseUrl}}/api/power_components/feed?power_component_id={{componentId}}&next=true",
+					"raw": "http://127.0.0.1:8000/api/power_components/feed?power_component_id=25&next=true",
+					"protocol": "http",
 					"host": [
-						"{{baseUrl}}"
+						"127",
+						"0",
+						"0",
+						"1"
 					],
+					"port": "8000",
 					"path": [
 						"api",
 						"power_components",
@@ -265,26 +256,18 @@
 					"query": [
 						{
 							"key": "power_component_id",
-							"value": "{{componentId}}",
-							"description": "ID компонента. Выключить — лента без ид (первый опубликованный)",
-							"disabled": true
+							"value": "25"
 						},
 						{
 							"key": "next",
-							"value": "true",
-							"description": "true — следующий опубликованный после ID",
-							"disabled": true
+							"value": "true"
 						}
 					]
-				},
-				"description": "Доступна без авторизации. Один метод ленты. Без параметров (галочки сняты) — первый опубликованный компонент, как при переходе с панели вкладок. С power_component_id — этот компонент, с power_component_id и next=true — следующий опубликованный после него (после последнего — снова первый). is_liked = 1, если текущий пользователь уже лайкнул компонент: лента по нему закрашивает сердце и решает, что отправить в POST лайка (like=0 или like=1). is_mine = 1 — свой компонент. creator — вложенная сериализация пользователя. Для гостя is_liked и is_mine всегда 0."
+				}
 			},
 			"protocolProfileBehavior": {
 				"disableCookies": true
-			}
-		},
-		{
-			"name": "06 POST Лайк",
+			},
 			"event": [
 				{
 					"listen": "test",
@@ -292,38 +275,45 @@
 						"type": "text/javascript",
 						"exec": [
 							"pm.test(\"Статус 200\", () => pm.response.to.have.status(200));",
-							"pm.test(\"Лайк стоит\", () => pm.expect(pm.response.json().is_liked).to.eql(1));"
+							"pm.test(\"Признак is_liked 0/1\", () => pm.expect([0, 1]).to.include(pm.response.json().is_liked));"
 						]
 					}
 				}
-			],
+			]
+		},
+		{
+			"name": "06 POST Лайк",
 			"request": {
 				"method": "POST",
 				"header": [
 					{
 						"key": "Content-Type",
-						"value": "application/json"
+						"value": "application/json",
+						"type": "text"
 					},
 					{
 						"key": "Cookie",
-						"value": "session_id={{sessionId}}",
-						"type": "text",
-						"description": "Кука сессии. Снять галочку — запрос от гостя"
+						"value": "session_id=93acddd1-215b-4263-8db6-32bba6831985",
+						"type": "text"
 					}
 				],
 				"url": {
-					"raw": "{{baseUrl}}/api/power_components/{{componentId}}/like",
+					"raw": "http://127.0.0.1:8000/api/power_components/25/like",
+					"protocol": "http",
 					"host": [
-						"{{baseUrl}}"
+						"127",
+						"0",
+						"0",
+						"1"
 					],
+					"port": "8000",
 					"path": [
 						"api",
 						"power_components",
-						"{{componentId}}",
+						"25",
 						"like"
 					]
 				},
-				"description": "Только авторизованный (без куки — 401). like = 1 ставит лайк, like = 0 отменяет. Повторный лайк не дублируется.",
 				"body": {
 					"mode": "raw",
 					"raw": "{\n  \"like\": 1\n}",
@@ -336,10 +326,51 @@
 			},
 			"protocolProfileBehavior": {
 				"disableCookies": true
-			}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Статус 200\", () => pm.response.to.have.status(200));",
+							"pm.test(\"Лайк стоит\", () => pm.expect(pm.response.json().is_liked).to.eql(1));"
+						]
+					}
+				}
+			]
 		},
 		{
 			"name": "07 DELETE Удаление компонента",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Cookie",
+						"value": "session_id=93acddd1-215b-4263-8db6-32bba6831985",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/power_components/25",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"power_components",
+						"25"
+					]
+				}
+			},
+			"protocolProfileBehavior": {
+				"disableCookies": true
+			},
 			"event": [
 				{
 					"listen": "test",
@@ -351,82 +382,38 @@
 						]
 					}
 				}
-			],
-			"request": {
-				"method": "DELETE",
-				"header": [
-					{
-						"key": "Cookie",
-						"value": "session_id={{sessionId}}",
-						"type": "text",
-						"description": "Кука сессии. Снять галочку — запрос от гостя"
-					}
-				],
-				"url": {
-					"raw": "{{baseUrl}}/api/power_components/{{componentId}}",
-					"host": [
-						"{{baseUrl}}"
-					],
-					"path": [
-						"api",
-						"power_components",
-						"{{componentId}}"
-					]
-				},
-				"description": "Только авторизованный (без куки — 401). Логическое удаление (status = deleted), только свои компоненты (чужой — 403)."
-			},
-			"protocolProfileBehavior": {
-				"disableCookies": true
-			}
+			]
 		},
 		{
-			"name": "08 POST Регистрация пользователя",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"type": "text/javascript",
-						"exec": [
-							"pm.test(\"Статус 201\", () => pm.response.to.have.status(201));",
-							"pm.test(\"Ответ в JSON\", () => pm.response.to.be.json);",
-							"pm.test(\"Пароль не возвращается\", () => pm.expect(pm.response.json()).to.not.have.property(\"password\"));"
-						]
-					}
-				},
-				{
-					"listen": "prerequest",
-					"script": {
-						"type": "text/javascript",
-						"exec": [
-							"// Каждый запуск — новый логин, иначе повторная регистрация получит 409",
-							"pm.collectionVariables.set(\"registerLogin\", \"builder_\" + Date.now().toString().slice(-6));"
-						]
-					}
-				}
-			],
+			"name": "08 POST Регистрация",
 			"request": {
 				"method": "POST",
 				"header": [
 					{
 						"key": "Content-Type",
-						"value": "application/json"
+						"value": "application/json",
+						"type": "text"
 					}
 				],
 				"url": {
-					"raw": "{{baseUrl}}/api/users/register",
+					"raw": "http://127.0.0.1:8000/api/users/register",
+					"protocol": "http",
 					"host": [
-						"{{baseUrl}}"
+						"127",
+						"0",
+						"0",
+						"1"
 					],
+					"port": "8000",
 					"path": [
 						"api",
 						"users",
 						"register"
 					]
 				},
-				"description": "Пароль хранится в виде хеша PBKDF2-SHA256 и не возвращается в ответе.",
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"login\": \"{{registerLogin}}\",\n  \"password\": \"builder123\"\n}",
+					"raw": "{\n  \"login\": \"builder_petr\",\n  \"password\": \"builder123\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -436,10 +423,59 @@
 			},
 			"protocolProfileBehavior": {
 				"disableCookies": true
-			}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"Статус 201\", () => pm.response.to.have.status(201));"
+						]
+					}
+				}
+			]
 		},
 		{
 			"name": "09 POST Аутентификация",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/users/login",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"users",
+						"login"
+					]
+				},
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"login\": \"builder_petr\",\n  \"password\": \"builder123\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				}
+			},
+			"protocolProfileBehavior": {
+				"disableCookies": true
+			},
 			"event": [
 				{
 					"listen": "test",
@@ -447,52 +483,43 @@
 						"type": "text/javascript",
 						"exec": [
 							"pm.test(\"Статус 200\", () => pm.response.to.have.status(200));",
-							"pm.test(\"Ответ в JSON\", () => pm.response.to.be.json);",
-							"const setCookie = pm.response.headers.get(\"Set-Cookie\") || \"\";",
-							"pm.test(\"Выдана кука session_id\", () => pm.expect(setCookie).to.include(\"session_id=\"));",
-							"pm.test(\"Кука HttpOnly\", () => pm.expect(setCookie.toLowerCase()).to.include(\"httponly\"));",
-							"const m = setCookie.match(/session_id=([^;]+)/);",
-							"if (m) pm.collectionVariables.set(\"newSessionId\", m[1]);"
+							"pm.test(\"Кука session_id\", () => pm.expect(pm.response.headers.get(\"Set-Cookie\")).to.include(\"session_id=\"));"
 						]
 					}
 				}
-			],
+			]
+		},
+		{
+			"name": "10 POST Деавторизация",
 			"request": {
 				"method": "POST",
 				"header": [
 					{
-						"key": "Content-Type",
-						"value": "application/json"
+						"key": "Cookie",
+						"value": "session_id=0b5e3f7a-6c41-4d2e-9a18-7f3c2d9e4b60",
+						"type": "text"
 					}
 				],
 				"url": {
-					"raw": "{{baseUrl}}/api/users/login",
+					"raw": "http://127.0.0.1:8000/api/users/logout",
+					"protocol": "http",
 					"host": [
-						"{{baseUrl}}"
+						"127",
+						"0",
+						"0",
+						"1"
 					],
+					"port": "8000",
 					"path": [
 						"api",
 						"users",
-						"login"
+						"logout"
 					]
-				},
-				"description": "Проверяет логин и пароль (хеш PBKDF2), создаёт в Redis ключ session:<id> → {user_id, login} со сроком жизни сутки и возвращает куку session_id (HttpOnly). Неверные данные — 401. Входит пользователь, зарегистрированный запросом 08; значение его куки сохраняется в переменную newSessionId (sessionId из Swagger не меняется).",
-				"body": {
-					"mode": "raw",
-					"raw": "{\n  \"login\": \"{{registerLogin}}\",\n  \"password\": \"builder123\"\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
 				}
 			},
 			"protocolProfileBehavior": {
 				"disableCookies": true
-			}
-		},
-		{
-			"name": "10 POST Деавторизация",
+			},
 			"event": [
 				{
 					"listen": "test",
@@ -503,57 +530,7 @@
 						]
 					}
 				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Cookie",
-						"value": "session_id={{newSessionId}}",
-						"type": "text",
-						"description": "Кука сессии из запроса 09. Снять галочку — запрос от гостя (401)"
-					}
-				],
-				"url": {
-					"raw": "{{baseUrl}}/api/users/logout",
-					"host": [
-						"{{baseUrl}}"
-					],
-					"path": [
-						"api",
-						"users",
-						"logout"
-					]
-				},
-				"description": "Удаляет сессию из Redis и куку. Без куки — 401. Завершает сессию пользователя, вошедшего запросом 09 (переменная newSessionId), поэтому сессия из Swagger (sessionId) остаётся рабочей и коллекцию можно прогонять повторно."
-			},
-			"protocolProfileBehavior": {
-				"disableCookies": true
-			}
-		}
-	],
-	"variable": [
-		{
-			"key": "baseUrl",
-			"value": "http://127.0.0.1:8000"
-		},
-		{
-			"key": "sessionId",
-			"value": "",
-			"description": "Значение куки session_id из браузера (F12 → Application → Cookies)"
-		},
-		{
-			"key": "newSessionId",
-			"value": "",
-			"description": "Сессия пользователя из запроса 08, выданная запросом 09; её завершает запрос 10"
-		},
-		{
-			"key": "componentId",
-			"value": "2"
-		},
-		{
-			"key": "registerLogin",
-			"value": "new_builder"
+			]
 		}
 	]
 }
