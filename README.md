@@ -47,7 +47,7 @@ docker exec -it pc_power_redis redis-cli TTL session:<uuid>
 
 ```bash
 docker cp scripts/active_sessions.lua pc_power_redis:/data/active_sessions.lua
-docker exec -it pc_power_redis redis-cli --eval /data/active_sessions.lua , session:*
+docker exec -it pc_power_redis redis-cli --eval /data/active_sessions.lua
 ```
 
 Тот же скрипт одной строкой через `EVAL`:
